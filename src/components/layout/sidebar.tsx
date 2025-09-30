@@ -11,6 +11,7 @@ import {
   SidebarFooter,
   SidebarInput,
   SidebarContent,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons/logo';
 import {
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const menuItems = [
   {
@@ -56,17 +58,17 @@ const menuItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { content, language } = useLanguage();
+  const { state } = useSidebar();
 
   return (
     <Sidebar
-      variant="floating"
-      collapsible="icon"
       side={language === 'ar' ? 'right' : 'left'}
+      collapsible="icon"
     >
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", state === 'collapsed' && "justify-center")}>
           <Logo className="size-7 text-primary" />
-          <div className="flex flex-col items-start">
+          <div className={cn("flex flex-col items-start", state === 'collapsed' && 'hidden')}>
             <h2 className="font-headline text-lg font-semibold tracking-tight text-primary">
               Al-Nadi Hub
             </h2>
@@ -76,8 +78,11 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-2">
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground rtl:left-auto rtl:right-3" />
-                <SidebarInput placeholder="Search..." className="pl-9 rtl:pl-0 rtl:pr-9" />
+                <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground", language === 'ar' ? 'right-3' : 'left-3')} />
+                <SidebarInput placeholder="Search..." className={cn(language === 'ar' ? 'pr-9' : 'pl-9', state === 'collapsed' && 'hidden')} />
+                 <Button variant="ghost" size="icon" className={cn("w-full", state === 'expanded' && 'hidden')}>
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                </Button>
             </div>
         </div>
         <SidebarMenu className="flex-1 p-2 pt-0">
@@ -90,7 +95,7 @@ export function AppSidebar() {
               >
                 <Link href={item.href}>
                   <item.icon />
-                  <span>{content[item.key as keyof typeof content]}</span>
+                  <span className={cn(state === 'collapsed' && 'hidden')}>{content[item.key as keyof typeof content]}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -102,7 +107,7 @@ export function AppSidebar() {
           <Button asChild variant="outline" className="w-full justify-start">
             <Link href="/login">
               <LogIn
-                className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`}
+                className={cn("h-4 w-4", language === 'ar' ? 'ml-2' : 'mr-2')}
               />
               {content.login}
             </Link>

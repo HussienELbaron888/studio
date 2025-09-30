@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/layout/header';
 import { AppSidebar } from '@/components/layout/sidebar';
 import {
   SidebarProvider,
+  SidebarInset,
 } from '@/components/ui/sidebar';
 import { LanguageDirector } from '@/components/layout/language-director';
 
@@ -39,11 +40,11 @@ export default function RootLayout({
           <Toaster />
           <SidebarProvider>
             <AppHeader />
-            <div>
+            <div className="flex">
               <AppSidebar />
-              <main className="flex w-full flex-col min-h-[calc(100vh-4rem)] bg-background pt-16">
+              <SidebarInset>
                   {children}
-              </main>
+              </SidebarInset>
             </div>
           </SidebarProvider>
         </body>
