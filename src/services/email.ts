@@ -1,5 +1,6 @@
 
 'use server';
+import * as Brevo from '@brevo/brevo';
 
 type ConfirmationEmailPayload = {
   studentName: string;
@@ -10,18 +11,19 @@ type ConfirmationEmailPayload = {
 /**
  * Sends a confirmation email to the user and admin.
  * This is a placeholder function. To implement actual email sending, you would:
- * 1. Choose an email service provider (e.g., SendGrid, Mailgun, Resend).
- * 2. Install their SDK (e.g., `npm install @sendgrid/mail`).
- * 3. Configure an API key in your environment variables (e.g., SENDGRID_API_KEY).
- * 4. Replace the console.log statements with the actual email sending logic.
+ * 1. Sign up for an email service provider like Brevo (https://www.brevo.com/).
+ * 2. Get your API key from your Brevo account dashboard.
+ * 3. Store the API key securely in an environment variable (e.g., in a .env.local file).
+ *    BREVO_API_KEY=xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ * 4. Uncomment and configure the Brevo example code below.
  * 
  * NOTE: This function should be triggered from a secure, server-side environment
- * (like a Next.js Server Action, API Route, or a Firebase Cloud Function) to protect your API keys.
- * The current implementation simulates the action without sending real emails.
+ * (like a Next.js Server Action, which this is) to protect your API keys.
  */
 export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const { studentName, activityTitle, userEmail } = payload;
   const adminEmail = 'admin@example.com'; // Replace with your admin email
+  const senderEmail = 'sender@example.com'; // Replace with a verified sender email in Brevo
 
   console.log('--- SIMULATING EMAIL ---');
   console.log(`To: ${userEmail}`);
@@ -35,34 +37,38 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   console.log(`Body: A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.`);
   console.log('------------------------');
 
-  // Example with SendGrid (after setup):
+  // Example with Brevo (after setup):
   /*
+  if (!process.env.BREVO_API_KEY) {
+    console.error('Brevo API key is not set. Skipping email sending.');
+    return { success: false, error: 'Email service is not configured.' };
+  }
+
+  const apiInstance = new Brevo.TransactionalEmailsApi();
+  const apiKey = apiInstance.authentications['apiKey'];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+
+  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+
   try {
-    const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const userMsg = {
-      to: userEmail,
-      from: 'you@example.com', // Use a verified sender email
-      subject: `Subscription Confirmation: ${activityTitle}`,
-      text: `Hello ${studentName}, you have successfully subscribed to ${activityTitle}.`,
-      html: `<strong>Hello ${studentName},</strong><p>You have successfully subscribed to ${activityTitle}.</p>`,
-    };
-
-    const adminMsg = {
-      to: adminEmail,
-      from: 'you@example.com',
-      subject: `New Subscription: ${activityTitle}`,
-      text: `A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.`,
-      html: `<strong>New Subscription:</strong><p>A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.</p>`,
-    };
-
-    await sgMail.send(userMsg);
-    await sgMail.send(adminMsg);
+    // Send to User
+    sendSmtpEmail.to = [{ email: userEmail, name: studentName }];
+    sendSmtpEmail.sender = { email: senderEmail, name: 'Al-Nadi Activities' };
+    sendSmtpEmail.subject = `Subscription Confirmation: ${activityTitle}`;
+    sendSmtpEmail.htmlContent = `<html><body><h1>Hello ${studentName}!</h1><p>You have successfully subscribed to the activity: <strong>${activityTitle}</strong>.</p></body></html>`;
+    sendSmtpEmail.textContent = `Hello ${studentName}! You have successfully subscribed to the activity: ${activityTitle}.`;
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
     
+    // Send to Admin
+    sendSmtpEmail.to = [{ email: adminEmail }];
+    sendSmtpEmail.subject = `New Subscription: ${activityTitle}`;
+    sendSmtpEmail.htmlContent = `<html><body><h1>New Subscription</h1><p>A new user has subscribed:</p><ul><li>Email: ${userEmail}</li><li>Student: ${studentName}</li><li>Activity: ${activityTitle}</li></ul></body></html>`;
+    sendSmtpEmail.textContent = `New subscription for ${activityTitle} from ${userEmail} (Student: ${studentName}).`;
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+
     return { success: true };
   } catch (error) {
-    console.error('Email sending failed:', error);
+    console.error('Email sending with Brevo failed:', error);
     return { success: false, error: 'Failed to send email.' };
   }
   */
