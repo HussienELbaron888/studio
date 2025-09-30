@@ -1,7 +1,6 @@
 
 "use client";
 
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Carousel,
@@ -10,11 +9,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { activities } from '@/lib/placeholder-data';
 import { useLanguage } from '@/context/language-context';
+import { ActivityCard } from '@/components/activities/activity-card';
 
 export function ActivitiesCarousel() {
   const { language, content } = useLanguage();
@@ -37,7 +35,7 @@ export function ActivitiesCarousel() {
               <Link href="/activities">{content.viewAll}</Link>
             </Button>
           </div>
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="items-center gap-2 hidden sm:flex">
              {language === 'ar' ? (
               <>
                 <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
@@ -58,36 +56,10 @@ export function ActivitiesCarousel() {
               key={activity.id}
               className="md:basis-1/2 lg:basis-1/3"
             >
-              <Card className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="relative h-56 w-full">
-                    <Image
-                      src={activity.image.imageUrl}
-                      alt={activity.image.description}
-                      fill
-                      className="object-cover"
-                      data-ai-hint={activity.image.imageHint}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                    <Badge
-                      className={`absolute top-3 ${
-                        language === 'ar' ? 'left-3' : 'right-3'
-                      } ${
-                        activity.type === 'Paid'
-                          ? 'bg-accent text-accent-foreground'
-                          : 'bg-primary'
-                      }`}
-                    >
-                      {activity.type === 'Paid' ? content.paid : content.free}
-                    </Badge>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-headline text-lg font-semibold">
-                      {activity.title[language]}
-                    </h3>
-                  </div>
-                </CardContent>
-              </Card>
+              <ActivityCard 
+                activity={activity}
+                imageSizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
             </CarouselItem>
           ))}
         </CarouselContent>

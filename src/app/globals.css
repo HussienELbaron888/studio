@@ -82,4 +82,21 @@
   body {
     @apply bg-background text-foreground;
   }
+  html[lang="ar"] {
+    --font-family-body: 'Cairo', sans-serif;
+    --font-family-headline: 'Cairo', sans-serif;
+  }
+
+  html[lang="en"] {
+    --font-family-body: 'Inter', sans-serif;
+    --font-family-headline: 'Poppins', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-family-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-headline);
+  }
 }

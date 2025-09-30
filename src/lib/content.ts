@@ -57,6 +57,13 @@ export const content = {
     suggestTags: 'Suggest Tags',
     suggestedTags: 'Suggested Tags',
     submit: 'Submit',
+    // Subscription Form
+    subscribeButton: 'Subscribe',
+    subscriptionSuccessTitle: 'Success!',
+    subscriptionSuccessMessage: 'You have been subscribed to the activity.',
+    studentNameLabel: 'Student Name',
+    classLabel: 'Class',
+    phoneLabel: 'Phone Number',
   },
   ar: {
     // Header
@@ -116,5 +123,12 @@ export const content = {
     suggestTags: 'اقترح وسوم',
     suggestedTags: 'الوسوم المقترحة',
     submit: 'إرسال',
+    // Subscription Form
+    subscribeButton: 'اشتراك',
+    subscriptionSuccessTitle: 'نجاح!',
+    subscriptionSuccessMessage: 'لقد تم تسجيل اشتراكك في النشاط بنجاح.',
+    studentNameLabel: 'اسم الطالب',
+    classLabel: 'الفصل',
+    phoneLabel: 'رقم الهاتف',
   },
 };
