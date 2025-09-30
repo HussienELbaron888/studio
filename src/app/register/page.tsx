@@ -51,7 +51,7 @@ export default function RegisterPage() {
       await setDoc(doc(db, 'user', user.uid), {
         name: values.name,
         email: values.email,
-        user: 'user', // Default role
+        role: 'user', // Default role
       });
 
       toast({
@@ -101,7 +101,7 @@ export default function RegisterPage() {
                       <Input type="email" placeholder="email@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </Item>
+                  </FormItem>
                 )}
               />
               <FormField
@@ -114,7 +114,7 @@ export default function RegisterPage() {
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </Item>
+                  </FormItem>
                 )}
               />
               <FormField
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </Item>
+                  </FormItem>
                 )}
               />
               <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={isSubmitting}>

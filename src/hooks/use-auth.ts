@@ -23,7 +23,7 @@ export function useAuth() {
           if (userDoc.exists()) {
             setUser({
               ...firebaseUser,
-              role: userDoc.data().user || 'user',
+              role: userDoc.data().role || 'user',
             });
           } else {
             // This might happen briefly when a user is created
