@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -13,7 +12,6 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { sendEmail } from "@/ai/flows/send-email-flow";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -54,6 +52,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
     }
 
     try {
+      // 1. Save subscription to Firestore
       const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
       await addDoc(subscriptionsRef, {
         activityId,
@@ -62,29 +61,38 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
         subscribedAt: serverTimestamp(),
       });
 
-      // Send confirmation email via Genkit Flow
-      const emailResult = await sendEmail({
-        studentName: values.studentName,
-        activityTitle: activityTitle,
-        userEmail: user.email,
-      });
-
-      if (emailResult.success) {
-        toast({
-            title: content.subscriptionSuccessTitle,
-            description: content.subscriptionSuccessMessage,
+      // 2. Send email via the new API route
+      try {
+        const res = await fetch('/api/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentName: values.studentName,
+            activityTitle,
+            userEmail: user.email,
+          }),
         });
-      } else {
+
+        const json = await res.json();
+        if (!res.ok || !json.ok) {
+           throw new Error(json.error || 'Failed to send email.');
+        }
+
+        toast({
+          title: content.subscriptionSuccessTitle,
+          description: content.subscriptionSuccessMessage,
+        });
+      } catch (emailError: any) {
          toast({
             title: "Subscription successful, but email failed",
-            description: `Could not send confirmation email. Reason: ${emailResult.error}`,
+            description: `Could not send confirmation email. Reason: ${emailError.message}`,
             variant: "destructive"
         });
       }
 
       setDialogOpen(false);
     } catch (error) {
-      console.error("Error saving subscription:", error);
+      console.error("Error during subscription process:", error);
       toast({
         title: "Error",
         description: "Failed to save subscription. Please try again.",
