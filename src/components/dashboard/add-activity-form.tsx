@@ -68,21 +68,28 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     setIsSubmitting(true);
     
     try {
+      // 1. Prepare DocRef to get an ID
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
       let imagePath: string | null = null;
+      let imageUrl: string | null = null;
       
+      // 2. Upload image if it exists
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
         imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
+
         const storageRef = ref(storage, imagePath);
-        
-        await uploadBytes(storageRef, imageFile, { 
+        await uploadBytes(storageRef, imageFile, {
             contentType: imageFile.type || "application/octet-stream" 
         });
+
+        // We don't call getDownloadURL here to avoid hanging
+        imageUrl = ""; // Keep it empty, it will be resolved on client
       }
-      
+
+      // 3. Save the document
       await setDoc(activityRef, {
         title: { en: values.title_en, ar: values.title_ar },
         description: { en: values.description_en, ar: values.description_ar },
@@ -94,10 +101,10 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         image: {
             id: `custom-${Date.now()}`,
             description: values.description_en,
-            imageUrl: "", // Left empty, will be resolved on client
+            imageUrl: imageUrl || "", // Will be empty
             imageHint: "custom activity"
         },
-        image_path: imagePath,
+        image_path: imagePath, // Save the path
         created_at: serverTimestamp(),
       });
 
@@ -105,6 +112,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         title: "تم بنجاح!",
         description: "تمت إضافة النشاط بنجاح.",
       });
+      form.reset();
       setDialogOpen(false);
 
     } catch (error: any) {
