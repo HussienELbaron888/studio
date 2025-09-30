@@ -29,18 +29,27 @@ export function ActivitiesCarousel() {
         className="w-full"
       >
         <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <h2 className="font-headline text-3xl font-bold md:text-4xl">
-            {content.activitiesTitle}
+              {content.activitiesTitle}
             </h2>
-            <div className="hidden sm:flex items-center gap-4">
-                <Button asChild variant="link">
-                    <Link href="/activities">{content.viewAll}</Link>
-                </Button>
-                <div className="flex items-center">
-                    <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-                    <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-                </div>
-            </div>
+            <Button asChild variant="link" className="hidden sm:inline-flex">
+              <Link href="/activities">{content.viewAll}</Link>
+            </Button>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+             {language === 'ar' ? (
+              <>
+                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+              </>
+            ) : (
+              <>
+                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+              </>
+            )}
+          </div>
         </div>
       
         <CarouselContent>
@@ -82,9 +91,18 @@ export function ActivitiesCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <div className="sm:hidden mt-4 flex items-center justify-center">
-            <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-            <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+        <div className="sm:hidden mt-4 flex items-center justify-center gap-4">
+            {language === 'ar' ? (
+              <>
+                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+              </>
+            ) : (
+              <>
+                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+              </>
+            )}
         </div>
         <Button asChild variant="link" className="mt-4 w-full sm:hidden">
           <Link href="/activities">{content.viewAll}</Link>
