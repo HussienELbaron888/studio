@@ -1,15 +1,58 @@
+
 "use client";
 
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/icons/logo';
 import { useLanguage } from '@/context/language-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Globe, LogIn } from 'lucide-react';
+import { Globe, LogIn, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+
+function UserNav() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  if (!user) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+          <LayoutDashboard className="mr-2 h-4 w-4" />
+          <span>Dashboard</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 
 export function AppHeader() {
   const { content, toggleLanguage, language } = useLanguage();
+  const { user, loading } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b bg-card/80 backdrop-blur-sm">
@@ -32,15 +75,25 @@ export function AppHeader() {
           <Button variant="ghost" size="icon" onClick={toggleLanguage} aria-label="Toggle Language">
             <Globe className="h-5 w-5" />
           </Button>
-          <Button asChild variant="ghost" className="hidden sm:inline-flex">
-            <Link href="/login">
-              <LogIn className={cn("h-4 w-4", language === 'ar' ? 'ml-2' : 'mr-2')} />
-              {content.login}
-            </Link>
-          </Button>
-          <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href="/register">{content.register}</Link>
-          </Button>
+          {!loading && (
+            <>
+              {user ? (
+                <UserNav />
+              ) : (
+                <>
+                  <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                    <Link href="/login">
+                      <LogIn className={cn("h-4 w-4", language === 'ar' ? 'ml-2' : 'mr-2')} />
+                      {content.login}
+                    </Link>
+                  </Button>
+                  <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Link href="/register">{content.register}</Link>
+                  </Button>
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
     </header>
