@@ -65,12 +65,9 @@ export function AppHeader() {
 
         <div className="flex-1 md:flex-grow-0" />
         
-        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-            <Image src="/AGS LOGO.png" alt="AGS Logo" width={40} height={40} />
-            <h1 className="font-headline text-xl font-bold tracking-tight text-primary">
-              Al-Nadi Hub
-            </h1>
-            <Image src="/ACTIVITY.png" alt="Activity Logo" width={40} height={40} />
+        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
+            <Image src="/AGS LOGO.png" alt="AGS Logo" width={50} height={50} />
+            <Image src="/ACTIVITY.png" alt="Activity Logo" width={50} height={50} />
         </div>
 
         <div className="flex items-center gap-2">
