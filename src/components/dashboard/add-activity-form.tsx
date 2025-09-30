@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useLanguage } from "@/context/language-context";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 
 const formSchema = z.object({
   title_ar: z.string().min(3, "العنوان بالعربية مطلوب."),
@@ -72,22 +71,18 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
-      let imageUrl: string | null = "";
       let imagePath: string | null = null;
-
+      
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
         imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
         const storageRef = ref(storage, imagePath);
-        const metadata = { contentType: imageFile.type || "application/octet-stream" };
         
-        await uploadBytes(storageRef, imageFile, metadata);
-        // We no longer get the URL here. It will be fetched on demand.
-        
-      } else {
-        imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
+        await uploadBytes(storageRef, imageFile, { 
+            contentType: imageFile.type || "application/octet-stream" 
+        });
       }
-
+      
       await setDoc(activityRef, {
         title: { en: values.title_en, ar: values.title_ar },
         description: { en: values.description_en, ar: values.description_ar },
@@ -99,10 +94,10 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         image: {
             id: `custom-${Date.now()}`,
             description: values.description_en,
-            imageUrl: imageUrl, // Stored as empty or placeholder
+            imageUrl: "", // Left empty, will be resolved on client
             imageHint: "custom activity"
         },
-        image_path: imagePath, // We store the path
+        image_path: imagePath,
         created_at: serverTimestamp(),
       });
 

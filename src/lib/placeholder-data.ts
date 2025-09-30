@@ -32,7 +32,7 @@ export type Trip = {
 export type SliderItem = {
   id: number;
   title: { en: string; ar: string };
-  subtitle: { en: string; ar: string };
+  subtitle: { en: string; ar:string };
   image: ReturnType<typeof getImage>;
 };
 
