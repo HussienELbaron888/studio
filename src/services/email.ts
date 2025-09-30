@@ -1,6 +1,9 @@
 
 'use server';
 import * as Brevo from '@getbrevo/brevo';
+import { config } from 'dotenv';
+
+config();
 
 type ConfirmationEmailPayload = {
   studentName: string;
@@ -47,7 +50,7 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
 
     return { success: true };
   } catch (error: any) {
-    console.error('Email sending with Brevo failed:', error);
+    console.error('Email sending with Brevo failed:', error.response ? error.response.body : error);
     // Extracting a more specific error message if available
     const errorMessage = error.response?.body?.message || error.message || 'Failed to send email.';
     return { success: false, error: errorMessage };
