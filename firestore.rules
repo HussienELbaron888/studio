@@ -3,31 +3,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
-    }
-
+    // Rule for user documents
     match /user/{userId} {
-      // Users can read their own data, Admins can read anyone's data
-      allow read: if isOwner(userId) || isAdmin();
+      // Users can create their own document.
+      allow create: if request.auth.uid == userId;
       
-      // Any authenticated user can create a user document (register)
-      allow create: if request.auth.uid != null;
+      // Users can only read or update their own document.
+      allow read, update: if request.auth.uid == userId;
 
-      // Users can update their own data, Admins can update anyone's data
-      allow update: if isOwner(userId) || isAdmin();
-
-      // Only admins can delete user documents
-      allow delete: if isAdmin();
-
+      // Rules for the 'subscriptions' subcollection within a user document
       match /subscriptions/{subscriptionId} {
-        // A user can read/write their own subscriptions. Admins have full access.
-        allow read, write: if isOwner(userId) || isAdmin();
+        // A user can read, write, and delete their own subscriptions.
+        allow read, write, delete: if request.auth.uid == userId;
       }
     }
   }
