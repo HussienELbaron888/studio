@@ -75,7 +75,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="pt-16 md:pt-0">
         <div className="p-2">
             <div className="relative">
                 <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground", language === 'ar' ? 'right-3' : 'left-3')} />

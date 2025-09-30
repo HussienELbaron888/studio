@@ -215,7 +215,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("group peer hidden md:block text-sidebar-foreground sticky top-0", className)}
+        className={cn("group peer hidden md:block text-sidebar-foreground sticky top-16", className)}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
@@ -225,7 +225,7 @@ const Sidebar = React.forwardRef<
         <div
           data-sidebar="sidebar"
           className={cn(
-            "flex h-screen flex-col bg-sidebar transition-[width] duration-300 ease-in-out",
+            "flex h-[calc(100vh-4rem)] flex-col bg-sidebar transition-[width] duration-300 ease-in-out",
             open ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]",
             side === "left" ? "border-r" : "border-l",
           )}
@@ -301,8 +301,8 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "flex-1 flex-col",
-        "min-h-[calc(100vh-4rem)] bg-background pt-16",
+        "flex-1 flex flex-col",
+        "min-h-[calc(100vh-4rem)] bg-background",
         className
       )}
       {...props}
@@ -337,7 +337,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2 pt-16 md:pt-2", className)}
+      className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
     />
   )
