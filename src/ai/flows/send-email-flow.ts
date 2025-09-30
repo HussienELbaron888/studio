@@ -12,7 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import * as Brevo from '@getbrevo/brevo';
 
-export const SendEmailInputSchema = z.object({
+const SendEmailInputSchema = z.object({
   studentName: z.string().describe('The name of the student subscribing.'),
   activityTitle: z.string().describe('The title of the activity.'),
   userEmail: z.string().email().describe('The email of the user to send the confirmation to.'),
