@@ -13,7 +13,6 @@ import {
   SidebarContent,
   useSidebar
 } from '@/components/ui/sidebar';
-import { Logo } from '@/components/icons/logo';
 import {
   Home,
   LayoutGrid,
@@ -64,18 +63,12 @@ export function AppSidebar() {
     <Sidebar
       side={language === 'ar' ? 'right' : 'left'}
       collapsible="icon"
+      className="z-30"
     >
-      <SidebarHeader className="border-b">
-        <div className={cn("flex items-center gap-2", state === 'collapsed' && "justify-center")}>
-          <Logo className="size-7 text-primary" />
-          <div className={cn("flex flex-col items-start", state === 'collapsed' && 'hidden')}>
-            <h2 className="font-headline text-lg font-semibold tracking-tight text-primary">
-              Al-Nadi Hub
-            </h2>
-          </div>
-        </div>
+      <SidebarHeader className="border-b h-14">
+        {/* Empty header as requested */}
       </SidebarHeader>
-      <SidebarContent className="pt-16 md:pt-0">
+      <SidebarContent>
         <div className="p-2">
             <div className="relative">
                 <Search className={cn("absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground", language === 'ar' ? 'right-3' : 'left-3')} />
