@@ -14,23 +14,13 @@ type ConfirmationEmailPayload = {
 export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const { studentName, activityTitle, userEmail } = payload;
   
-  // الخطوة التالية: استبدل هذه العناوين بمعلوماتك الحقيقية
-  const adminEmail = 'hussienelbaron888@gmail.com'; // <--- ضع هنا بريدك الإلكتروني كمسؤول
-  const senderEmail = 'hussienelbaron888@gmail.com'; // <--- ضع هنا بريدك المعتمد في Brevo
+  const adminEmail = 'hussienelbaron888@gmail.com'; 
+  const senderEmail = 'hussienelbaron888@gmail.com';
 
   if (!process.env.BREVO_API_KEY) {
-    console.error('Brevo API key is not set. Skipping email sending.');
-    console.log('--- SIMULATING EMAIL ---');
-    console.log(`To: ${userEmail}`);
-    console.log(`Subject: Subscription Confirmation: ${activityTitle}`);
-    console.log(`Body: Hello ${studentName}, you have successfully subscribed to ${activityTitle}.`);
-    console.log('------------------------');
-    console.log('--- SIMULATING EMAIL ---');
-    console.log(`To: ${adminEmail}`);
-    console.log(`Subject: New Subscription: ${activityTitle}`);
-    console.log(`Body: A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.`);
-    console.log('------------------------');
-    return { success: false, error: 'Email service is not configured.' };
+    const errorMessage = 'Brevo API key is not set. Please restart the server after setting it in .env file.';
+    console.error(errorMessage);
+    return { success: false, error: errorMessage };
   }
 
   const apiInstance = new Brevo.TransactionalEmailsApi();
@@ -56,8 +46,10 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
     await apiInstance.sendTransacEmail(sendSmtpEmail);
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Email sending with Brevo failed:', error);
-    return { success: false, error: 'Failed to send email.' };
+    // Extracting a more specific error message if available
+    const errorMessage = error.response?.body?.message || error.message || 'Failed to send email.';
+    return { success: false, error: errorMessage };
   }
 }

@@ -63,16 +63,25 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
       });
 
       // Send confirmation email
-      await sendConfirmationEmail({
+      const emailResult = await sendConfirmationEmail({
         studentName: values.studentName,
         activityTitle: activityTitle,
         userEmail: user.email,
       });
 
-      toast({
-          title: content.subscriptionSuccessTitle,
-          description: content.subscriptionSuccessMessage,
-      });
+      if (emailResult.success) {
+        toast({
+            title: content.subscriptionSuccessTitle,
+            description: content.subscriptionSuccessMessage,
+        });
+      } else {
+         toast({
+            title: "Subscription successful, but email failed",
+            description: `Could not send confirmation email. Reason: ${emailResult.error}`,
+            variant: "destructive"
+        });
+      }
+
       setDialogOpen(false);
     } catch (error) {
       console.error("Error saving subscription:", error);
