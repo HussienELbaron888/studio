@@ -1,3 +1,4 @@
+
 // src/app/api/email/route.ts
 // ✅ This is server-only code – it never loads on the client
 export const runtime = 'nodejs'; // Ensure we're on the Node runtime (important for Firebase App Hosting)
