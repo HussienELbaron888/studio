@@ -11,7 +11,7 @@ export default function ContactPage() {
   const { content } = useLanguage();
 
   return (
-    <div className="flex min-h-full items-center justify-center p-4">
+    <div className="flex flex-grow items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-2xl">{content.navContact}</CardTitle>

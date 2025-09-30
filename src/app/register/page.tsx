@@ -11,11 +11,10 @@ export default function RegisterPage() {
   const { content } = useLanguage();
 
   return (
-    <div className="flex min-h-full items-center justify-center p-4">
+    <div className="flex flex-grow items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-2xl">{content.registerTitle}</CardTitle>
-          <CardDescription>{content.registerSubtitle}</CardDescription>
+          <CardTitle className="font-headline text-2xl">{content.registerTitle}</CardTitle>          <CardDescription>{content.registerSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4">

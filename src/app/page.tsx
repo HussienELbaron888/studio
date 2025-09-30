@@ -7,16 +7,18 @@ import { TalentsCard } from '@/components/home/talents-card';
 
 export default function Home() {
   return (
-    <div className="space-y-12 md:space-y-16 lg:space-y-20 pb-16">
-      <HeroSlider />
-      <div className="container mx-auto px-4">
-        <div className="space-y-12 md:space-y-16 lg:space-y-20">
-          <StatsSection />
-          <ActivitiesCarousel />
-          <TripsCarousel />
-          <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
-            <EventsCard />
-            <TalentsCard />
+    <div className="flex-grow">
+      <div className="space-y-12 md:space-y-16 lg:space-y-20 pb-16">
+        <HeroSlider />
+        <div className="container mx-auto px-4">
+          <div className="space-y-12 md:space-y-16 lg:space-y-20">
+            <StatsSection />
+            <ActivitiesCarousel />
+            <TripsCarousel />
+            <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
+              <EventsCard />
+              <TalentsCard />
+            </div>
           </div>
         </div>
       </div>

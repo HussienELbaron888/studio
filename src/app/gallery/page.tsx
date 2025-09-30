@@ -10,7 +10,7 @@ export default function GalleryPage() {
   const { language, content } = useLanguage();
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="container mx-auto p-4 md:p-8 flex-grow">
       <h1 className="mb-8 font-headline text-3xl font-bold md:text-4xl">
         {content.navGallery}
       </h1>
