@@ -19,12 +19,12 @@ export function ActivitiesCarousel() {
   const { language, content } = useLanguage();
 
   return (
-    <section>
+    <section className="relative">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="font-headline text-3xl font-bold md:text-4xl">
           {content.activitiesTitle}
         </h2>
-        <Button asChild variant="link">
+        <Button asChild variant="link" className="hidden sm:inline-flex">
           <Link href="/activities">{content.viewAll}</Link>
         </Button>
       </div>
@@ -35,6 +35,10 @@ export function ActivitiesCarousel() {
         }}
         className="w-full"
       >
+        <div className="absolute -top-14 ltr:right-0 rtl:left-0 flex items-center">
+            <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+            <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+        </div>
         <CarouselContent>
           {activities.map((activity) => (
             <CarouselItem
@@ -74,9 +78,10 @@ export function ActivitiesCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute -top-14 border-primary text-primary disabled:text-primary ltr:right-12 rtl:left-12" />
-        <CarouselNext className="absolute -top-14 border-primary text-primary disabled:text-primary ltr:right-0 rtl:left-0" />
       </Carousel>
+       <Button asChild variant="link" className="mt-4 w-full sm:hidden">
+          <Link href="/activities">{content.viewAll}</Link>
+        </Button>
     </section>
   );
 }
