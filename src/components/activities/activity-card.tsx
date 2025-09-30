@@ -26,7 +26,7 @@ export function ActivityCard({ activity, imageSizes }: { activity: Activity, ima
   useEffect(() => {
     let mounted = true;
     async function resolveUrl() {
-      if (!activity.image?.imageUrl && activity.image_path) {
+      if (activity.image && !activity.image.imageUrl && activity.image_path) {
         try {
           const ref = storageRef(storage, activity.image_path);
           const url = await getDownloadURL(ref);
@@ -39,6 +39,8 @@ export function ActivityCard({ activity, imageSizes }: { activity: Activity, ima
             setResolvedUrl("https://placehold.co/600x400/EEE/31343C?text=Image+Error");
           }
         }
+      } else if (activity.image?.imageUrl) {
+        setResolvedUrl(activity.image.imageUrl);
       }
     }
     resolveUrl();

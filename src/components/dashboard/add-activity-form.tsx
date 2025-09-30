@@ -79,13 +79,12 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
         imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
-
         const storageRef = ref(storage, imagePath);
+        
         await uploadBytes(storageRef, imageFile, {
             contentType: imageFile.type || "application/octet-stream" 
         });
 
-        // We don't call getDownloadURL here to avoid hanging
         imageUrl = ""; // Keep it empty, it will be resolved on client
       }
 
@@ -98,12 +97,12 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         sessions: values.sessions,
         price: values.price,
         type: values.type,
-        image: {
+        image: imageFile ? {
             id: `custom-${Date.now()}`,
             description: values.description_en,
             imageUrl: imageUrl || "", // Will be empty
             imageHint: "custom activity"
-        },
+        } : null,
         image_path: imagePath, // Save the path
         created_at: serverTimestamp(),
       });
