@@ -31,8 +31,8 @@ async function sendEmailViaBrevo({ studentName, activityTitle, userEmail }: Payl
   const api = new Brevo.TransactionalEmailsApi();
   api.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
 
-  const senderEmail = process.env.SENDER_EMAIL || 'no-reply@yourdomain.com';
-  const senderName = process.env.SENDER_NAME || 'Al-Nadi Activities';
+  const senderEmail = process.env.SENDER_EMAIL || 'noreply@ags-activity.com';
+  const senderName = process.env.SENDER_NAME || 'AGS Activities';
 
   // Email to the user
   const toUser = new Brevo.SendSmtpEmail();
