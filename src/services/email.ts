@@ -1,9 +1,6 @@
 
 'use server';
 import * as Brevo from '@getbrevo/brevo';
-import { config } from 'dotenv';
-
-config();
 
 type ConfirmationEmailPayload = {
   studentName: string;
