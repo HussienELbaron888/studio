@@ -1,35 +1,54 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to content collections
-    match /(activities|trips|photoAlbums|sliderItems|placeholderImages)/{doc} {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow public read for general content
+    match /activities/{activityId} {
       allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /trips/{tripId} {
+      allow read: if true;
+    }
+    match /gallery/{albumId} {
+      allow read: if true;
+    }
+     match /slider/{itemId} {
+      allow read: if true;
     }
 
-    // Rules for user data
+    // Rules for user collection
     match /user/{userId} {
-      // Allow user creation for any authenticated user
-      allow create: if request.auth != null;
-      // Allow users to read their own data
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow users to create their own profile
+      allow create: if request.auth.uid != null;
+      
+      // Allow users to read their own data, and admins to read any user data
+      allow read: if request.auth.uid == userId || get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+
       // Allow users to update their own data (but not their role)
-      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.role == resource.data.role;
-       // Admins can read/write any user's data
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
+
+      // Allow admins to update any user data (including role)
+      allow update: if get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Rules for subscriptions
+    // Rules for subscriptions collection
     match /subscriptions/{subscriptionId} {
-      // Allow users to create their own subscriptions
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      // Allow users to read their own subscriptions
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow logged-in users to create a subscription for themselves
+      allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to read their own subscriptions.
+      // This rule allows querying the collection.
+      allow read: if request.auth.uid != null && request.auth.uid == resource.data.userId;
+
       // Admins can read all subscriptions
-      allow read: if request.auth != null && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
-      // Prevent updates and deletes for now
-      allow update, delete: if false;
+      allow read, write: if get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
