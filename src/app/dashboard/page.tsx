@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Tabs,
   TabsContent,
@@ -8,9 +11,26 @@ import {
 } from '@/components/ui/tabs';
 import { useLanguage } from '@/context/language-context';
 import { ManageActivities } from '@/components/dashboard/manage-activities';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const { content } = useLanguage();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || user.role !== 'admin')) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+  
+  if (loading || !user || user.role !== 'admin') {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const tabs = [
     { value: 'activities', label: content.manageActivities, component: <ManageActivities /> },
@@ -22,7 +42,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="container mx-auto p-4 md:p-8 flex-grow">
+    <div className="container mx-auto p-4 md:p-8 flex-grow mt-16">
       <h1 className="mb-8 font-headline text-3xl font-bold md:text-4xl">
         {content.dashboardTitle}
       </h1>

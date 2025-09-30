@@ -25,32 +25,38 @@ import {
 import { useLanguage } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 const menuItems = [
   {
     href: '/',
     icon: Home,
     key: 'navHome',
+    adminOnly: false,
   },
   {
     href: '/activities',
     icon: LayoutGrid,
     key: 'navActivities',
+    adminOnly: false,
   },
   {
     href: '/gallery',
     icon: ImageIcon,
     key: 'navGallery',
+    adminOnly: false,
   },
   {
     href: '/contact',
     icon: Mail,
     key: 'navContact',
+    adminOnly: false,
   },
   {
     href: '/dashboard',
     icon: Shield,
     key: 'navDashboard',
+    adminOnly: true,
   },
 ];
 
@@ -58,14 +64,17 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { content, language } = useLanguage();
   const { state } = useSidebar();
+  const { user } = useAuth();
+
+  const availableMenuItems = menuItems.filter(item => !item.adminOnly || (item.adminOnly && user?.role === 'admin'));
 
   return (
     <Sidebar
       side={language === 'ar' ? 'right' : 'left'}
       collapsible="icon"
-      className="z-30"
+      className="z-30 pt-16"
     >
-      <SidebarHeader className="border-b h-28">
+      <SidebarHeader className="border-b h-12">
         {/* Empty header as requested */}
       </SidebarHeader>
       <SidebarContent>
@@ -79,7 +88,7 @@ export function AppSidebar() {
             </div>
         </div>
         <SidebarMenu className="flex-1 p-2 pt-0">
-          {menuItems.map((item) => (
+          {availableMenuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
