@@ -3,52 +3,32 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Default deny all
-    match /{document=**} {
-      allow read, write: if false;
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // Allow public read for general content
-    match /activities/{activityId} {
-      allow read: if true;
-    }
-    match /trips/{tripId} {
-      allow read: if true;
-    }
-    match /gallery/{albumId} {
-      allow read: if true;
-    }
-     match /slider/{itemId} {
-      allow read: if true;
+    function isAdmin() {
+      return get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Rules for user collection
     match /user/{userId} {
-      // Allow users to create their own profile
+      // Users can read their own data, Admins can read anyone's data
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Any authenticated user can create a user document (register)
       allow create: if request.auth.uid != null;
-      
-      // Allow users to read their own data, and admins to read any user data
-      allow read: if request.auth.uid == userId || get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
 
-      // Allow users to update their own data (but not their role)
-      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
+      // Users can update their own data, Admins can update anyone's data
+      allow update: if isOwner(userId) || isAdmin();
 
-      // Allow admins to update any user data (including role)
-      allow update: if get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
-    }
+      // Only admins can delete user documents
+      allow delete: if isAdmin();
 
-    // Rules for subscriptions collection
-    match /subscriptions/{subscriptionId} {
-      // Allow logged-in users to create a subscription for themselves
-      allow create: if request.auth.uid != null && request.resource.data.userId == request.auth.uid;
-      
-      // Allow users to read their own subscriptions.
-      // This rule allows querying the collection.
-      allow read: if request.auth.uid != null && request.auth.uid == resource.data.userId;
-
-      // Admins can read all subscriptions
-      allow read, write: if get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+      match /subscriptions/{subscriptionId} {
+        // A user can read/write their own subscriptions. Admins have full access.
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
     }
   }
 }
