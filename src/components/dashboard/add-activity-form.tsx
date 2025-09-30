@@ -5,8 +5,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, doc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,8 +40,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,100 +60,66 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    form.setValue("image", file); // Set file object for submission
+    if (file) {
+      setImageFile(file);
+    }
   };
-
-  const saveActivityToFirestore = async (values: z.infer<typeof formSchema>, imageUrl: string, imageHint: string) => {
-    const newActivity = {
-      title: { en: values.title_en, ar: values.title_ar },
-      description: { en: values.description_en, ar: values.description_ar },
-      schedule: { en: values.schedule_en, ar: values.schedule_ar },
-      time: values.time,
-      sessions: values.sessions,
-      price: values.price,
-      type: values.type,
-      image: {
-          id: `custom-${Date.now()}`,
-          description: values.description_en,
-          imageUrl: imageUrl,
-          imageHint: imageHint
-      }
-    };
-
-    await addDoc(collection(db, "activities"), newActivity);
-  };
-
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const imageFile = values.image as File | undefined;
+    
+    try {
+      // 1. Generate docId before upload
+      const activityRef = doc(collection(db, "activities"));
+      const activityId = activityRef.id;
 
-    if (!imageFile) {
-      try {
-        await saveActivityToFirestore(values, "https://placehold.co/600x400/EEE/31343C?text=Activity", "placeholder");
-        toast({
-          title: "تم بنجاح!",
-          description: "تمت إضافة النشاط بنجاح.",
-        });
-        setDialogOpen(false);
-      } catch (error: any) {
-        toast({
-          title: "خطأ",
-          description: `فشلت عملية الإضافة. الخطأ: ${error.message || 'Unknown error'}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
+      let imageUrl: string | null = null;
+
+      // 2. Upload image if it exists
+      if (imageFile) {
+        const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
+        const imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
+        const storageRef = ref(storage, imagePath);
+
+        await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(storageRef);
+      } else {
+        imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
       }
-      return;
-    }
 
-    // If there is an image file
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const storageRef = ref(storage, `activities/${Date.now()}-${imageFile.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, imageFile);
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error("Upload failed:", error);
-        toast({
-          title: "فشل رفع الصورة",
-          description: `حدث خطأ أثناء رفع الصورة: ${error.message}`,
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        setIsSubmitting(false);
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          await saveActivityToFirestore(values, downloadURL, "custom activity");
-          toast({
-            title: "تم بنجاح!",
-            description: "تمت إضافة النشاط ورفع الصورة بنجاح.",
-          });
-          setDialogOpen(false);
-        } catch (error: any) {
-          console.error("Error saving activity after upload:", error);
-          toast({
-            title: "خطأ",
-            description: `فشلت عملية حفظ النشاط بعد رفع الصورة. الخطأ: ${error.message}`,
-            variant: "destructive",
-          });
-        } finally {
-           setIsUploading(false);
-           setIsSubmitting(false);
+      // 3. Save the document
+      await setDoc(activityRef, {
+        title: { en: values.title_en, ar: values.title_ar },
+        description: { en: values.description_en, ar: values.description_ar },
+        schedule: { en: values.schedule_en, ar: values.schedule_ar },
+        time: values.time,
+        sessions: values.sessions,
+        price: values.price,
+        type: values.type,
+        image: {
+            id: `custom-${Date.now()}`,
+            description: values.description_en,
+            imageUrl: imageUrl,
+            imageHint: "custom activity"
         }
-      }
-    );
+      });
+
+      toast({
+        title: "تم بنجاح!",
+        description: "تمت إضافة النشاط بنجاح.",
+      });
+      setDialogOpen(false);
+
+    } catch (error: any) {
+      console.error("Failed to add activity:", error);
+      toast({
+        title: "خطأ",
+        description: `فشلت عملية الإضافة. الخطأ: ${error.code || error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -216,7 +181,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         <FormField
             control={form.control}
             name="image"
-            render={({ field }) => (
+            render={() => (
                 <FormItem>
                 <FormLabel>{content.imageLabel}</FormLabel>
                 <FormControl>
@@ -231,15 +196,9 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
                 </FormItem>
             )}
         />
-        {isUploading && (
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">جارٍ رفع الصورة...</p>
-            <Progress value={uploadProgress} className="w-full" />
-          </div>
-        )}
         <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isUploading ? 'جارٍ الرفع...' : content.addActivity}
+            {isSubmitting ? 'جارٍ الحفظ...' : content.addActivity}
         </Button>
       </form>
     </Form>
