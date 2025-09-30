@@ -228,9 +228,7 @@ const Sidebar = React.forwardRef<
             "duration-200 relative h-svh w-0 bg-transparent transition-[width] ease-linear",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
-            variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
+            variant === "floating" || variant === "inset" ? "group-data-[collapsible=icon]:w-0" : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
             // Sidebar is not collapsed
             "group-data-[state=expanded]:w-[--sidebar-width]"
           )}
@@ -362,7 +360,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2 pt-16", className)}
+      className={cn("flex flex-col gap-2 p-2 pt-16 md:pt-2", className)}
       {...props}
     />
   )
