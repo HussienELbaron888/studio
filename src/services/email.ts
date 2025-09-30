@@ -9,27 +9,17 @@ type ConfirmationEmailPayload = {
 };
 
 /**
- * Sends a confirmation email to the user and admin.
- * This is a placeholder function. To implement actual email sending, you would:
- * 1. Sign up for an email service provider like Brevo (https://www.brevo.com/).
- * 2. Get your API key from your Brevo account dashboard.
- * 3. Store the API key securely in an environment variable (e.g., in a .env.local file).
- *    BREVO_API_KEY=xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
- * 4. Uncomment and configure the Brevo example code below.
- * 
- * NOTE: This function should be triggered from a secure, server-side environment
- * (like a Next.js Server Action, which this is) to protect your API keys.
+ * Sends a confirmation email to the user and admin using Brevo.
  */
 export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const { studentName, activityTitle, userEmail } = payload;
-  const adminEmail = 'admin@example.com'; // Replace with your admin email
-  const senderEmail = 'sender@example.com'; // Replace with a verified sender email in Brevo
-
   
-  // Example with Brevo (after setup):
+  // الخطوة التالية: استبدل هذه العناوين بمعلوماتك الحقيقية
+  const adminEmail = 'hussienelbaron888@gmail.com'; // <--- ضع هنا بريدك الإلكتروني كمسؤول
+  const senderEmail = 'hussienelbaron888@gmail.com'; // <--- ضع هنا بريدك المعتمد في Brevo
+
   if (!process.env.BREVO_API_KEY) {
     console.error('Brevo API key is not set. Skipping email sending.');
-    // In production, you might want to return an error or just log it
     console.log('--- SIMULATING EMAIL ---');
     console.log(`To: ${userEmail}`);
     console.log(`Subject: Subscription Confirmation: ${activityTitle}`);
@@ -70,5 +60,4 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
     console.error('Email sending with Brevo failed:', error);
     return { success: false, error: 'Failed to send email.' };
   }
-
 }
