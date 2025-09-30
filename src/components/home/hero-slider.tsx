@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -65,8 +66,17 @@ export function HeroSlider() {
       </CarouselContent>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
         <div className="flex items-center justify-center gap-4 rounded-full bg-card/50 p-2 backdrop-blur-sm">
-          <CarouselPrevious className="static -translate-y-0" />
-          <CarouselNext className="static -translate-y-0" />
+          {language === 'ar' ? (
+            <>
+              <CarouselNext className="static -translate-y-0" />
+              <CarouselPrevious className="static -translate-y-0" />
+            </>
+          ) : (
+            <>
+              <CarouselPrevious className="static -translate-y-0" />
+              <CarouselNext className="static -translate-y-0" />
+            </>
+          )}
         </div>
       </div>
     </Carousel>
