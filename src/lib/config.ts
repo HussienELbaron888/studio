@@ -1,4 +1,4 @@
-'use server';
+
 import 'dotenv/config';
 
 function assertValue<T>(v: T | undefined, errorMessage: string): T {
