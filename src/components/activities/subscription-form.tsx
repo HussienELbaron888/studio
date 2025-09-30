@@ -13,6 +13,7 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { sendConfirmationEmail } from "@/services/email";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -43,7 +44,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
   const { formState: { isSubmitting } } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
+    if (!user || !user.email) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to subscribe.",
@@ -59,6 +60,13 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
         activityTitle,
         ...values,
         subscribedAt: serverTimestamp(),
+      });
+
+      // Send confirmation email
+      await sendConfirmationEmail({
+        studentName: values.studentName,
+        activityTitle: activityTitle,
+        userEmail: user.email,
       });
 
       toast({
