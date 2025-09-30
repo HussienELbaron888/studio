@@ -13,7 +13,7 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { sendConfirmationEmail } from "@/services/email";
+import { sendEmail } from "@/ai/flows/send-email-flow";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -62,8 +62,8 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
         subscribedAt: serverTimestamp(),
       });
 
-      // Send confirmation email
-      const emailResult = await sendConfirmationEmail({
+      // Send confirmation email via Genkit Flow
+      const emailResult = await sendEmail({
         studentName: values.studentName,
         activityTitle: activityTitle,
         userEmail: user.email,
