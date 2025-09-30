@@ -15,6 +15,12 @@ type ConfirmationEmailPayload = {
 export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const { studentName, activityTitle, userEmail } = payload;
   
+  if (!brevoApiKey || brevoApiKey === 'YOUR_BREVO_API_KEY') {
+    const errorMessage = 'Brevo API key is not set in src/lib/config.ts. Please add it to proceed.';
+    console.error(errorMessage);
+    return { success: false, error: errorMessage };
+  }
+
   const adminEmail = 'hussienelbaron888@gmail.com'; 
   const senderEmail = 'hussienelbaron888@gmail.com';
 
