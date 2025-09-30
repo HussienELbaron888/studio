@@ -13,13 +13,9 @@ import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/placeholder-data';
 import { SubscriptionForm } from './subscription-form';
+import { Tag } from 'lucide-react';
 
-type ActivityCardProps = {
-  activity: Activity;
-  imageSizes: string;
-};
-
-export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
+export function ActivityCard({ activity, imageSizes }: { activity: Activity, imageSizes: string }) {
   const { language, content } = useLanguage();
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -69,9 +65,21 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
           </Badge>
         </div>
         <div className="p-4 flex flex-col flex-grow">
-          <h3 className="font-headline text-lg font-semibold flex-grow">
+          <h3 className="font-headline text-lg font-semibold mb-2">
             {activity.title[language]}
           </h3>
+          <div className="flex-grow space-y-2 text-sm text-muted-foreground">
+             {activity.price > 0 && (
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <span>{activity.price} {content.currency}</span>
+              </div>
+            )}
+             <div className="flex items-center gap-2">
+                <span className='font-semibold'>{activity.schedule[language]}</span>
+                <span>{activity.time}</span>
+            </div>
+          </div>
           {user && (
             <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>

@@ -1,3 +1,4 @@
+
 export const content = {
   en: {
     // Header
@@ -59,6 +60,13 @@ export const content = {
     suggestTags: 'Suggest Tags',
     suggestedTags: 'SuggestedTags',
     submit: 'Submit',
+    scheduleLabel: 'Schedule (Weekdays)',
+    timeLabel: 'Time',
+    sessionsLabel: 'Number of Sessions',
+    priceLabel: 'Price (SAR)',
+    currency: 'SAR',
+    imageLabel: 'Upload Image',
+    typeLabel: 'Type',
     // Subscription Form
     subscribeButton: 'Subscribe',
     subscribedButton: 'Subscribed',
@@ -131,6 +139,13 @@ export const content = {
     suggestTags: 'اقترح وسوم',
     suggestedTags: 'الوسوم المقترحة',
     submit: 'إرسال',
+    scheduleLabel: 'المواعيد (أيام الأسبوع)',
+    timeLabel: 'الوقت',
+    sessionsLabel: 'عدد الحصص',
+    priceLabel: 'السعر (ريال)',
+    currency: 'ريال',
+    imageLabel: 'رفع صورة',
+    typeLabel: 'النوع',
     // Subscription Form
     subscribeButton: 'اشتراك',
     subscribedButton: 'مشترك',

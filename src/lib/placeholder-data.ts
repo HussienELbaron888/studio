@@ -1,3 +1,4 @@
+
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) =>
@@ -8,6 +9,11 @@ export type Activity = {
   title: { en: string; ar: string };
   type: 'Free' | 'Paid';
   image: ReturnType<typeof getImage>;
+  description: { en: string; ar: string };
+  schedule: { en: string; ar: string };
+  time: string;
+  sessions: number;
+  price: number;
 };
 
 export type Trip = {
@@ -76,24 +82,44 @@ export const activities: Activity[] = [
     title: { en: 'Beach Volleyball', ar: 'كرة الطائرة الشاطئية' },
     type: 'Free',
     image: getImage('activity-1'),
+    description: { en: 'Join us for a fun game of beach volleyball.', ar: 'انضم إلينا في لعبة ممتعة لكرة الطائرة الشاطئية.' },
+    schedule: { en: 'Sat, Sun', ar: 'السبت, الأحد' },
+    time: '5:00 PM',
+    sessions: 8,
+    price: 0,
   },
   {
     id: 2,
     title: { en: 'Mountain Hiking', ar: 'تسلق الجبال' },
     type: 'Paid',
     image: getImage('activity-2'),
+    description: { en: 'Explore the scenic mountain trails.', ar: 'استكشف مسارات الجبال الخلابة.' },
+    schedule: { en: 'Fri', ar: 'الجمعة' },
+    time: '7:00 AM',
+    sessions: 4,
+    price: 150,
   },
   {
     id: 3,
     title: { en: 'Pasta Making Class', ar: 'درس صنع الباستا' },
     type: 'Paid',
     image: getImage('activity-3'),
+    description: { en: 'Learn to make authentic Italian pasta.', ar: 'تعلم صنع الباستا الإيطالية الأصيلة.' },
+    schedule: { en: 'Mon, Wed', ar: 'الإثنين, الأربعاء' },
+    time: '6:00 PM',
+    sessions: 6,
+    price: 250,
   },
   {
     id: 4,
     title: { en: 'Yoga in the Park', ar: 'يوجا في الحديقة' },
     type: 'Free',
     image: getImage('activity-4'),
+    description: { en: 'Relax and rejuvenate with our outdoor yoga session.', ar: 'استرخِ وجدد شبابك في جلسة اليوجا الخارجية.' },
+    schedule: { en: 'Tue, Thu', ar: 'الثلاثاء, الخميس' },
+    time: '8:00 AM',
+    sessions: 8,
+    price: 0,
   },
 ];
 
