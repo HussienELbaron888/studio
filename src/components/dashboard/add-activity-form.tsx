@@ -59,19 +59,15 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      let imageUrl = "";
-      let imageHint = "";
+      let imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
+      let imageHint = "placeholder";
 
-      // Use a placeholder if no image is uploaded
+      // If an image is provided, upload it and get the URL
       if (values.image) {
         const storageRef = ref(storage, `activities/${Date.now()}-${values.image.name}`);
         const uploadResult = await uploadBytes(storageRef, values.image);
         imageUrl = await getDownloadURL(uploadResult.ref);
         imageHint = "custom activity";
-      } else {
-        // You might want to have a default placeholder image
-        imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
-        imageHint = "placeholder";
       }
 
       const newActivity = {
