@@ -44,14 +44,16 @@ export function ActivityCard({ activity, imageSizes }: { activity: Activity, ima
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          <Image
-            src={activity.image.imageUrl}
-            alt={activity.image.description}
-            fill
-            className="object-cover"
-            data-ai-hint={activity.image.imageHint}
-            sizes={imageSizes}
-          />
+          {activity.image?.imageUrl && (
+            <Image
+              src={activity.image.imageUrl}
+              alt={activity.image.description}
+              fill
+              className="object-cover"
+              data-ai-hint={activity.image.imageHint}
+              sizes={imageSizes}
+            />
+          )}
           <Badge
             className={`absolute top-3 ${
               language === 'ar' ? 'left-3' : 'right-3'
