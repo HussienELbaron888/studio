@@ -62,11 +62,16 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       let imageUrl = "";
       let imageHint = "";
 
+      // Use a placeholder if no image is uploaded
       if (values.image) {
         const storageRef = ref(storage, `activities/${Date.now()}-${values.image.name}`);
         const uploadResult = await uploadBytes(storageRef, values.image);
         imageUrl = await getDownloadURL(uploadResult.ref);
         imageHint = "custom activity";
+      } else {
+        // You might want to have a default placeholder image
+        imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
+        imageHint = "placeholder";
       }
 
       const newActivity = {
@@ -78,7 +83,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         price: values.price,
         type: values.type,
         image: {
-            // This structure needs to match the Activity type
             id: `custom-${Date.now()}`,
             description: values.description_en,
             imageUrl: imageUrl,
@@ -98,7 +102,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       console.error("Error adding activity:", error);
       toast({
         title: "خطأ",
-        description: "فشلت إضافة النشاط. الرجاء المحاولة مرة أخرى.",
+        description: "فشلت إضافة النشاط. الرجاء التحقق من صلاحيات التخزين والمحاولة مرة أخرى.",
         variant: "destructive",
       });
     } finally {
@@ -165,14 +169,15 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         <FormField
             control={form.control}
             name="image"
-            render={({ field }) => (
+            render={({ field: { onChange, ...fieldProps } }) => (
                 <FormItem>
                 <FormLabel>{content.imageLabel}</FormLabel>
                 <FormControl>
                     <Input 
                         type="file" 
                         accept="image/*"
-                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
+                        onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                        {...fieldProps}
                     />
                 </FormControl>
                 <FormMessage />
@@ -187,3 +192,5 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     </Form>
   );
 }
+
+    
