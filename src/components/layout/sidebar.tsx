@@ -9,6 +9,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarInput,
+  SidebarContent,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons/logo';
 import {
@@ -18,6 +20,7 @@ import {
   Mail,
   Shield,
   LogIn,
+  Search,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
@@ -66,21 +69,29 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      <SidebarMenu className="flex-1 p-2">
-        {menuItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <Link href={item.href} passHref legacyBehavior>
-              <SidebarMenuButton
-                isActive={pathname === item.href}
-                tooltip={content[item.key as keyof typeof content]}
-              >
-                <item.icon />
-                <span>{content[item.key as keyof typeof content]}</span>
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
+      <SidebarContent>
+        <div className="p-2">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <SidebarInput placeholder="Search..." className="pl-9" />
+            </div>
+        </div>
+        <SidebarMenu className="flex-1 p-2 pt-0">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <Link href={item.href} passHref legacyBehavior>
+                <SidebarMenuButton
+                  isActive={pathname === item.href}
+                  tooltip={content[item.key as keyof typeof content]}
+                >
+                  <item.icon />
+                  <span>{content[item.key as keyof typeof content]}</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
       <SidebarFooter className="border-t p-2">
         <div className="block sm:hidden">
           <Button asChild variant="outline" className="w-full justify-start">
