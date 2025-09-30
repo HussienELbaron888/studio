@@ -5,10 +5,15 @@ const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
 
 export type Activity = {
-  id: number;
+  id: string; // Changed from number to string to match Firestore document ID
   title: { en: string; ar: string };
   type: 'Free' | 'Paid';
-  image: ReturnType<typeof getImage>;
+  image: {
+    id: string;
+    description: string;
+    imageUrl: string;
+    imageHint: string;
+  };
   description: { en: string; ar: string };
   schedule: { en: string; ar: string };
   time: string;
@@ -76,9 +81,10 @@ export const sliderItems: SliderItem[] = [
   },
 ];
 
-export const activities: Activity[] = [
+// This is now legacy data, the app will fetch from Firestore.
+// It's kept for reference and for other parts of the app that might still use it (e.g., trips).
+export const activities: Omit<Activity, 'id'>[] = [
   {
-    id: 1,
     title: { en: 'Beach Volleyball', ar: 'كرة الطائرة الشاطئية' },
     type: 'Free',
     image: getImage('activity-1'),
@@ -89,7 +95,6 @@ export const activities: Activity[] = [
     price: 0,
   },
   {
-    id: 2,
     title: { en: 'Mountain Hiking', ar: 'تسلق الجبال' },
     type: 'Paid',
     image: getImage('activity-2'),
@@ -100,18 +105,16 @@ export const activities: Activity[] = [
     price: 150,
   },
   {
-    id: 3,
     title: { en: 'Pasta Making Class', ar: 'درس صنع الباستا' },
     type: 'Paid',
     image: getImage('activity-3'),
-    description: { en: 'Learn to make authentic Italian pasta.', ar: 'تعلم صنع الباستا الإيطالية الأصيلة.' },
+    description: { en: 'Learn to make authentic Italian pasta.', ar: 'تعلم صنع البasta الإيطالية الأصيلة.' },
     schedule: { en: 'Mon, Wed', ar: 'الإثنين, الأربعاء' },
     time: '6:00 PM',
     sessions: 6,
     price: 250,
   },
   {
-    id: 4,
     title: { en: 'Yoga in the Park', ar: 'يوجا في الحديقة' },
     type: 'Free',
     image: getImage('activity-4'),

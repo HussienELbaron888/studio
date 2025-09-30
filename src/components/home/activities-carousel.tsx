@@ -10,12 +10,16 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
-import { activities } from '@/lib/placeholder-data';
 import { useLanguage } from '@/context/language-context';
 import { ActivityCard } from '@/components/activities/activity-card';
+import { useActivities } from '@/hooks/use-activities';
+import { Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
 
 export function ActivitiesCarousel() {
   const { language, content } = useLanguage();
+  const { activities, loading } = useActivities();
 
   return (
     <section>
@@ -49,37 +53,52 @@ export function ActivitiesCarousel() {
             )}
           </div>
         </div>
-      
-        <CarouselContent>
-          {activities.map((activity) => (
-            <CarouselItem
-              key={activity.id}
-              className="md:basis-1/2 lg:basis-1/3"
-            >
-              <ActivityCard 
-                activity={activity}
-                imageSizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <div className="sm:hidden mt-4 flex items-center justify-center gap-4">
-            {language === 'ar' ? (
-              <>
-                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-              </>
-            ) : (
-              <>
-                <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-                <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
-              </>
-            )}
-        </div>
+
+        {loading ? (
+           <div className="flex justify-center items-center h-80">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+           </div>
+        ) : activities.length > 0 ? (
+          <>
+            <CarouselContent>
+              {activities.map((activity) => (
+                <CarouselItem
+                  key={activity.id}
+                  className="md:basis-1/2 lg:basis-1/3"
+                >
+                  <ActivityCard 
+                    activity={activity}
+                    imageSizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="sm:hidden mt-4 flex items-center justify-center gap-4">
+                {language === 'ar' ? (
+                  <>
+                    <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                    <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                  </>
+                ) : (
+                  <>
+                    <CarouselPrevious className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                    <CarouselNext className="static -translate-y-0 border-primary text-primary disabled:text-primary" />
+                  </>
+                )}
+            </div>
+          </>
+        ) : (
+           <Card className="flex items-center justify-center h-80">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <p>No activities available at the moment. Please check back later.</p>
+              </CardContent>
+           </Card>
+        )}
+        </Carousel>
+
         <Button asChild variant="link" className="mt-4 w-full sm:hidden">
           <Link href="/activities">{content.viewAll}</Link>
         </Button>
-      </Carousel>
     </section>
   );
 }

@@ -7,7 +7,8 @@ import { collection, query, onSnapshot, DocumentData } from "firebase/firestore"
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
-import { activities, Activity } from '@/lib/placeholder-data';
+import { Activity } from '@/lib/placeholder-data';
+import { useActivities } from '@/hooks/use-activities';
 import { ActivityCard } from '@/components/activities/activity-card';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export default function MySubscriptionsPage() {
   const { content } = useLanguage();
   const { user, loading: authLoading } = useAuth();
+  const { activities: allActivities, loading: activitiesLoading } = useActivities();
   const router = useRouter();
   const [subscribedActivities, setSubscribedActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +28,14 @@ export default function MySubscriptionsPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || activitiesLoading) return;
 
-    setLoading(true);
     const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
     const q = query(subscriptionsRef);
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const subscribedIds = querySnapshot.docs.map(doc => doc.data().activityId);
-      const userActivities = activities.filter(activity => subscribedIds.includes(activity.id));
+      const userActivities = allActivities.filter(activity => subscribedIds.includes(activity.id));
       setSubscribedActivities(userActivities);
       setLoading(false);
     }, (error) => {
@@ -43,9 +44,9 @@ export default function MySubscriptionsPage() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, allActivities, activitiesLoading]);
 
-  if (authLoading || loading) {
+  if (authLoading || loading || activitiesLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

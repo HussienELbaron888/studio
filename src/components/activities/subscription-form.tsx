@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -22,7 +23,7 @@ const formSchema = z.object({
 type SubscriptionFormProps = {
   setDialogOpen: (open: boolean) => void;
   activityTitle: string;
-  activityId: number;
+  activityId: string;
 }
 
 export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: SubscriptionFormProps) {
