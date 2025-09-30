@@ -2,6 +2,7 @@ export const content = {
   en: {
     // Header
     login: 'Login',
+    logout: 'Logout',
     register: 'Create Account',
     languageToggle: 'العربية',
     mySubscriptions: 'My Subscriptions',
@@ -56,7 +57,7 @@ export const content = {
     activityTitleLabel: 'Activity Title',
     activityDescriptionLabel: 'Description',
     suggestTags: 'Suggest Tags',
-    suggestedTags: 'Suggested Tags',
+    suggestedTags: 'SuggestedTags',
     submit: 'Submit',
     // Subscription Form
     subscribeButton: 'Subscribe',
@@ -73,6 +74,7 @@ export const content = {
   ar: {
     // Header
     login: 'تسجيل الدخول',
+    logout: 'تسجيل الخروج',
     register: 'إنشاء حساب',
     languageToggle: 'English',
     mySubscriptions: 'اشتراكاتي',
