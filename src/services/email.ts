@@ -1,6 +1,7 @@
 
 'use server';
 import * as Brevo from '@getbrevo/brevo';
+import { brevoApiKey } from '@/lib/config';
 
 type ConfirmationEmailPayload = {
   studentName: string;
@@ -17,15 +18,9 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const adminEmail = 'hussienelbaron888@gmail.com'; 
   const senderEmail = 'hussienelbaron888@gmail.com';
 
-  if (!process.env.BREVO_API_KEY) {
-    const errorMessage = 'Brevo API key is not set. Please restart the server after setting it in .env file.';
-    console.error(errorMessage);
-    return { success: false, error: errorMessage };
-  }
-
   const apiInstance = new Brevo.TransactionalEmailsApi();
   const apiKey = apiInstance.authentications['apiKey'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
+  apiKey.apiKey = brevoApiKey;
 
   const sendSmtpEmail = new Brevo.SendSmtpEmail();
 
