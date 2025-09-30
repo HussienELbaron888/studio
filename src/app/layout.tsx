@@ -22,7 +22,6 @@ export default function RootLayout({
 }>) {
   return (
     <LanguageProvider>
-      <LanguageDirector />
       <html lang="ar" dir="rtl">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,6 +36,7 @@ export default function RootLayout({
           />
         </head>
         <body className="font-body antialiased">
+          <LanguageDirector />
           <Toaster />
           <SidebarProvider>
             <AppHeader />
