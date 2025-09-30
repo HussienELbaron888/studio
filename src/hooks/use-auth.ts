@@ -1,8 +1,9 @@
+
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface AppUser extends User {
@@ -14,26 +15,39 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUser({
-            ...firebaseUser,
-            role: userDoc.data().role || 'user',
-          });
-        } else {
-          // Handle case where user exists in Auth but not in Firestore
-          setUser({ ...firebaseUser, role: 'user' });
-        }
+        
+        const unsubscribeSnapshot = onSnapshot(userDocRef, (userDoc) => {
+          if (userDoc.exists()) {
+            setUser({
+              ...firebaseUser,
+              role: userDoc.data().role || 'user',
+            });
+          } else {
+            // This might happen briefly when a user is created
+            // and the document hasn't been written yet.
+            // We set a default role.
+            setUser({ ...firebaseUser, role: 'user' });
+          }
+          setLoading(false);
+        }, (error) => {
+          console.error("Error fetching user role:", error);
+          setUser({ ...firebaseUser, role: 'user' }); // Fallback to user role on error
+          setLoading(false);
+        });
+
+        // Return the snapshot listener's unsubscribe function
+        // to clean up when the user logs out.
+        return () => unsubscribeSnapshot();
       } else {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   return { user, loading };

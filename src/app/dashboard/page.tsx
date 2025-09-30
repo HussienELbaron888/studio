@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -26,7 +27,7 @@ export default function DashboardPage() {
   
   if (loading || !user || user.role !== 'admin') {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -42,7 +43,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="container mx-auto p-4 md:p-8 flex-grow mt-16">
+    <div className="container mx-auto p-4 md:p-8 flex-grow">
       <h1 className="mb-8 font-headline text-3xl font-bold md:text-4xl">
         {content.dashboardTitle}
       </h1>
