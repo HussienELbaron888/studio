@@ -73,7 +73,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       const activityId = activityRef.id;
 
       let imagePath: string | null = null;
-      let imageUrl: string | null = null;
       
       // 2. Upload image if it exists
       if (imageFile) {
@@ -84,8 +83,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         await uploadBytes(storageRef, imageFile, {
             contentType: imageFile.type || "application/octet-stream" 
         });
-
-        imageUrl = ""; // Keep it empty, it will be resolved on client
       }
 
       // 3. Save the document
@@ -100,7 +97,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         image: imageFile ? {
             id: `custom-${Date.now()}`,
             description: values.description_en,
-            imageUrl: imageUrl || "", // Will be empty
+            imageUrl: "", // Will be empty, resolved on client
             imageHint: "custom activity"
         } : null,
         image_path: imagePath, // Save the path
