@@ -53,8 +53,8 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
     }
 
     try {
-      await addDoc(collection(db, "subscriptions"), {
-        userId: user.uid,
+      const subscriptionsRef = collection(db, 'user', user.uid, 'subscriptions');
+      await addDoc(subscriptionsRef, {
         activityId,
         activityTitle,
         ...values,

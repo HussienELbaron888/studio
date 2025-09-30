@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, onSnapshot, getDocs, DocumentData } from "firebase/firestore";
+import { collection, query, onSnapshot, DocumentData } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
@@ -29,9 +29,10 @@ export default function MySubscriptionsPage() {
     if (!user) return;
 
     setLoading(true);
-    const q = query(collection(db, "subscriptions"), where("userId", "==", user.uid));
+    const subscriptionsRef = collection(db, 'user', user.uid, 'subscriptions');
+    const q = query(subscriptionsRef);
     
-    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const subscribedIds = querySnapshot.docs.map(doc => doc.data().activityId);
       const userActivities = activities.filter(activity => subscribedIds.includes(activity.id));
       setSubscribedActivities(userActivities);
