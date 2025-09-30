@@ -39,7 +39,7 @@ export default function RootLayout({
           <Toaster />
           <SidebarProvider>
             <AppHeader />
-            <div className="flex">
+            <div>
               <AppSidebar />
               <main className="flex w-full flex-col min-h-[calc(100vh-4rem)] bg-background pt-16">
                   {children}
