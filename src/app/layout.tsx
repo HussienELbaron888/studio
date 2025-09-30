@@ -1,4 +1,8 @@
+
+"use client";
+
 import type { Metadata } from 'next';
+import { useEffect, useState } from 'react';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { LanguageProvider } from '@/context/language-context';
@@ -10,16 +14,17 @@ import {
 } from '@/components/ui/sidebar';
 import { LanguageDirector } from '@/components/layout/language-director';
 
-export const metadata: Metadata = {
-  title: 'Al-Nadi Activities Hub',
-  description: 'Your one-stop hub for activities, trips, and events.',
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <LanguageProvider>
       <html lang="ar" dir="rtl">
@@ -34,6 +39,8 @@ export default function RootLayout({
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
             rel="stylesheet"
           />
+          <title>Al-Nadi Activities Hub</title>
+          <meta name="description" content="Your one-stop hub for activities, trips, and events." />
         </head>
         <body className="font-body antialiased">
           <LanguageDirector />
@@ -41,7 +48,7 @@ export default function RootLayout({
           <SidebarProvider>
             <AppHeader />
             <div className="flex">
-              <AppSidebar />
+              {isClient && <AppSidebar />}
               <SidebarInset className="pt-16">
                   {children}
               </SidebarInset>
