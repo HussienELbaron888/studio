@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface AppUser extends User {
@@ -18,33 +18,25 @@ export function useAuth() {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userDocRef = doc(db, 'user', firebaseUser.uid);
-        
-        const unsubscribeSnapshot = onSnapshot(userDocRef, (userDoc) => {
+        try {
+          const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             setUser({
               ...firebaseUser,
               role: userDoc.data().role || 'user',
             });
           } else {
-            // This might happen briefly when a user is created
-            // and the document hasn't been written yet.
-            // We set a default role.
+            // User exists in Auth but not in Firestore, treat as regular user
             setUser({ ...firebaseUser, role: 'user' });
           }
-          setLoading(false);
-        }, (error) => {
+        } catch (error) {
           console.error("Error fetching user role:", error);
           setUser({ ...firebaseUser, role: 'user' }); // Fallback to user role on error
-          setLoading(false);
-        });
-
-        // Return the snapshot listener's unsubscribe function
-        // to clean up when the user logs out.
-        return () => unsubscribeSnapshot();
+        }
       } else {
         setUser(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     return () => unsubscribeAuth();
