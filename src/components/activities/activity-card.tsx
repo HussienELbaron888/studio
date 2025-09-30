@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { db } from '@/lib/firebase';
+import { getDownloadURL, ref as storageRef } from "firebase/storage";
+import { db, storage } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,30 @@ export function ActivityCard({ activity, imageSizes }: { activity: Activity, ima
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(activity.image?.imageUrl || null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function resolveUrl() {
+      if (!activity.image?.imageUrl && activity.image_path) {
+        try {
+          const ref = storageRef(storage, activity.image_path);
+          const url = await getDownloadURL(ref);
+          if (mounted) {
+            setResolvedUrl(url);
+          }
+        } catch (error) {
+          console.error("Error resolving image URL:", error);
+          if (mounted) {
+            setResolvedUrl("https://placehold.co/600x400/EEE/31343C?text=Image+Error");
+          }
+        }
+      }
+    }
+    resolveUrl();
+    return () => { mounted = false; };
+  }, [activity]);
+
 
   useEffect(() => {
     if (!user) {
@@ -44,13 +69,13 @@ export function ActivityCard({ activity, imageSizes }: { activity: Activity, ima
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {activity.image?.imageUrl && (
+          {resolvedUrl && (
             <Image
-              src={activity.image.imageUrl}
-              alt={activity.image.description}
+              src={resolvedUrl}
+              alt={activity.image?.description || 'Activity image'}
               fill
               className="object-cover"
-              data-ai-hint={activity.image.imageHint}
+              data-ai-hint={activity.image?.imageHint}
               sizes={imageSizes}
             />
           )}

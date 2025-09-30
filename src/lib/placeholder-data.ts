@@ -5,7 +5,7 @@ const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
 
 export type Activity = {
-  id: string; // Changed from number to string to match Firestore document ID
+  id: string; 
   title: { en: string; ar: string };
   type: 'Free' | 'Paid';
   image: {
@@ -14,6 +14,7 @@ export type Activity = {
     imageUrl: string;
     imageHint: string;
   };
+  image_path?: string | null;
   description: { en: string; ar: string };
   schedule: { en: string; ar: string };
   time: string;
