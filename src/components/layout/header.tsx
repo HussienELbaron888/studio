@@ -10,13 +10,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/context/language-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Globe, LogIn, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
+import { Globe, LogIn, LogOut, User as UserIcon, LayoutDashboard, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
 function UserNav() {
   const { user } = useAuth();
+  const { content } = useLanguage();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -36,15 +37,20 @@ function UserNav() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
+         <DropdownMenuItem onClick={() => router.push('/my-subscriptions')}>
+          <ListChecks className="mr-2 h-4 w-4" />
+          <span>{content.mySubscriptions}</span>
+        </DropdownMenuItem>
         {user.role === 'admin' && (
           <DropdownMenuItem onClick={() => router.push('/dashboard')}>
             <LayoutDashboard className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+            <span>{content.navDashboard}</span>
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{content.login}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

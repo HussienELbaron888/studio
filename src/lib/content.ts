@@ -4,6 +4,7 @@ export const content = {
     login: 'Login',
     register: 'Create Account',
     languageToggle: 'العربية',
+    mySubscriptions: 'My Subscriptions',
     // Sidebar
     navHome: 'Home',
     navActivities: 'Activities',
@@ -59,17 +60,22 @@ export const content = {
     submit: 'Submit',
     // Subscription Form
     subscribeButton: 'Subscribe',
+    subscribedButton: 'Subscribed',
     subscriptionSuccessTitle: 'Success!',
     subscriptionSuccessMessage: 'You have been subscribed to the activity.',
     studentNameLabel: 'Student Name',
     classLabel: 'Class',
     phoneLabel: 'Phone Number',
+    // My Subscriptions page
+    mySubscriptionsTitle: 'My Subscriptions',
+    noSubscriptions: 'You have not subscribed to any activities yet.',
   },
   ar: {
     // Header
     login: 'تسجيل الدخول',
     register: 'إنشاء حساب',
     languageToggle: 'English',
+    mySubscriptions: 'اشتراكاتي',
     // Sidebar
     navHome: 'الرئيسية',
     navActivities: 'الأنشطة',
@@ -125,10 +131,14 @@ export const content = {
     submit: 'إرسال',
     // Subscription Form
     subscribeButton: 'اشتراك',
+    subscribedButton: 'مشترك',
     subscriptionSuccessTitle: 'نجاح!',
     subscriptionSuccessMessage: 'لقد تم تسجيل اشتراكك في النشاط بنجاح.',
     studentNameLabel: 'اسم الطالب',
     classLabel: 'الفصل',
     phoneLabel: 'رقم الهاتف',
+    // My Subscriptions page
+    mySubscriptionsTitle: 'اشتراكاتي',
+    noSubscriptions: 'لم تقم بالاشتراك في أي أنشطة بعد.',
   },
 };

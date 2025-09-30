@@ -4,11 +4,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
@@ -20,11 +23,13 @@ const formSchema = z.object({
 type SubscriptionFormProps = {
   setDialogOpen: (open: boolean) => void;
   activityTitle: string;
+  activityId: number;
 }
 
-export function SubscriptionForm({ setDialogOpen, activityTitle }: SubscriptionFormProps) {
+export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: SubscriptionFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,13 +42,38 @@ export function SubscriptionForm({ setDialogOpen, activityTitle }: SubscriptionF
 
   const { formState: { isSubmitting } } = form;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({ activity: activityTitle, ...values });
-    toast({
-        title: content.subscriptionSuccessTitle,
-        description: content.subscriptionSuccessMessage,
-    });
-    setDialogOpen(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to subscribe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "subscriptions"), {
+        userId: user.uid,
+        activityId,
+        activityTitle,
+        ...values,
+        subscribedAt: serverTimestamp(),
+      });
+
+      toast({
+          title: content.subscriptionSuccessTitle,
+          description: content.subscriptionSuccessMessage,
+      });
+      setDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving subscription:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save subscription. Please try again.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
