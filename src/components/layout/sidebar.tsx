@@ -79,13 +79,16 @@ export function AppSidebar() {
         <SidebarMenu className="flex-1 p-2 pt-0">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref legacyBehavior>
+              <Link href={item.href} passHref>
                 <SidebarMenuButton
+                  asChild
                   isActive={pathname === item.href}
                   tooltip={content[item.key as keyof typeof content]}
                 >
-                  <item.icon />
-                  <span>{content[item.key as keyof typeof content]}</span>
+                  <>
+                    <item.icon />
+                    <span>{content[item.key as keyof typeof content]}</span>
+                  </>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
