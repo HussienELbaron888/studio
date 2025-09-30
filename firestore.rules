@@ -1,0 +1,27 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if a user is an admin
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // A user can be created by anyone during sign-up
+      allow create: if request.auth != null;
+      
+      // A user can read their own document, or an admin can read any user document
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+      // Only an admin can update user documents (e.g., to change a role)
+      allow update: if isAdmin();
+      
+      // Only an admin can delete user documents
+      allow delete: if isAdmin();
+    }
+  }
+}
