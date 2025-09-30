@@ -1,17 +1,53 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /user/{userId} {
-      // Allow any user to create their own user document upon signup.
-      allow create: if request.auth.uid == userId;
-      // Allow users to read/update their own data, or admins to do so.
-      allow read, update, delete: if request.auth.uid == userId || get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+
+    // Helper function to check for admin role
+    function isAdmin() {
+      return get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // This rule is broad and for development. For production, you'd want more specific rules.
-    // It allows admins to read/write anywhere.
+    // Users collection:
+    // - Allow user creation for anyone (for signup)
+    // - Allow users to read/update their own data
+    // - Allow admins to do anything
+    match /user/{userId} {
+      allow create: if request.auth.uid == userId;
+      allow read, update: if request.auth.uid == userId || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Public content collections:
+    // - Allow anyone to read
+    // - Only allow admins to write (create, update, delete)
+    match /activities/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /trips/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+     match /events/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+     match /talents/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+     match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+     match /slider/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Allow admins to read/write any other document
     match /{document=**} {
-      allow read, write: if get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+      allow read, write: if isAdmin();
     }
   }
 }
