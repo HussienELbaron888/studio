@@ -86,7 +86,7 @@ export function AppHeader() {
                       {content.login}
                     </Link>
                   </Button>
-                  <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Link href="/register">{content.register}</Link>
                   </Button>
                 </>
