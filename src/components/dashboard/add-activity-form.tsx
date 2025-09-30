@@ -58,18 +58,30 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    try {
-      let imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
-      let imageHint = "placeholder";
+    let imageUrl = "https://placehold.co/600x400/EEE/31343C?text=Activity";
+    let imageHint = "placeholder";
 
-      // If an image is provided, upload it and get the URL
+    try {
+      // Step 1: Handle image upload if a file is provided
       if (values.image) {
-        const storageRef = ref(storage, `activities/${Date.now()}-${values.image.name}`);
-        const uploadResult = await uploadBytes(storageRef, values.image);
-        imageUrl = await getDownloadURL(uploadResult.ref);
-        imageHint = "custom activity";
+        try {
+          const storageRef = ref(storage, `activities/${Date.now()}-${values.image.name}`);
+          const uploadResult = await uploadBytes(storageRef, values.image);
+          imageUrl = await getDownloadURL(uploadResult.ref);
+          imageHint = "custom activity";
+        } catch (uploadError: any) {
+          console.error("Error uploading image:", uploadError);
+          toast({
+            title: "خطأ في رفع الصورة",
+            description: `فشل رفع الصورة. يرجى التحقق من صلاحيات التخزين. الخطأ: ${uploadError.message}`,
+            variant: "destructive",
+          });
+          // Stop execution if image upload fails
+          return;
+        }
       }
 
+      // Step 2: Prepare the new activity data
       const newActivity = {
         title: { en: values.title_en, ar: values.title_ar },
         description: { en: values.description_en, ar: values.description_ar },
@@ -86,6 +98,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         }
       };
 
+      // Step 3: Add the document to Firestore
       await addDoc(collection(db, "activities"), newActivity);
 
       toast({
@@ -94,14 +107,15 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       });
       setDialogOpen(false);
 
-    } catch (error) {
-      console.error("Error adding activity:", error);
+    } catch (error: any) {
+      console.error("Error adding activity to Firestore:", error);
       toast({
         title: "خطأ",
-        description: "فشلت إضافة النشاط. الرجاء التحقق من صلاحيات التخزين والمحاولة مرة أخرى.",
+        description: `فشلت إضافة النشاط إلى قاعدة البيانات. الخطأ: ${error.message}`,
         variant: "destructive",
       });
     } finally {
+      // Step 4: ALWAYS stop the loading indicator
       setIsSubmitting(false);
     }
   }
