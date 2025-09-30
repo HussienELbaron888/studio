@@ -1,6 +1,6 @@
 
 'use server';
-import * as Brevo from '@brevo/brevo';
+import * as Brevo from '@getbrevo/brevo';
 
 type ConfirmationEmailPayload = {
   studentName: string;
@@ -14,7 +14,7 @@ type ConfirmationEmailPayload = {
  * 1. Sign up for an email service provider like Brevo (https://www.brevo.com/).
  * 2. Get your API key from your Brevo account dashboard.
  * 3. Store the API key securely in an environment variable (e.g., in a .env.local file).
- *    BREVO_API_KEY=xkeysib-xsmtpsib-d33a94f9077005a9060099d8dd7f1b0cb3360a479e83bf39924f2e9f2b7b5e2e-K5qy0DxPY2S8UaMV
+ *    BREVO_API_KEY=xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  * 4. Uncomment and configure the Brevo example code below.
  * 
  * NOTE: This function should be triggered from a secure, server-side environment
@@ -22,25 +22,24 @@ type ConfirmationEmailPayload = {
  */
 export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
   const { studentName, activityTitle, userEmail } = payload;
-  const adminEmail = 'hussienelbaron888@gmail.com'; // Replace with your admin email
-  const senderEmail = 'hussienelbaron888@gmail.com'; // Replace with a verified sender email in Brevo
+  const adminEmail = 'admin@example.com'; // Replace with your admin email
+  const senderEmail = 'sender@example.com'; // Replace with a verified sender email in Brevo
 
-  console.log('--- SIMULATING EMAIL ---');
-  console.log(`To: ${userEmail}`);
-  console.log(`Subject: Subscription Confirmation: ${activityTitle}`);
-  console.log(`Body: Hello ${studentName}, you have successfully subscribed to ${activityTitle}.`);
-  console.log('------------------------');
-
-  console.log('--- SIMULATING EMAIL ---');
-  console.log(`To: ${adminEmail}`);
-  console.log(`Subject: New Subscription: ${activityTitle}`);
-  console.log(`Body: A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.`);
-  console.log('------------------------');
-
+  
   // Example with Brevo (after setup):
-  /*
   if (!process.env.BREVO_API_KEY) {
     console.error('Brevo API key is not set. Skipping email sending.');
+    // In production, you might want to return an error or just log it
+    console.log('--- SIMULATING EMAIL ---');
+    console.log(`To: ${userEmail}`);
+    console.log(`Subject: Subscription Confirmation: ${activityTitle}`);
+    console.log(`Body: Hello ${studentName}, you have successfully subscribed to ${activityTitle}.`);
+    console.log('------------------------');
+    console.log('--- SIMULATING EMAIL ---');
+    console.log(`To: ${adminEmail}`);
+    console.log(`Subject: New Subscription: ${activityTitle}`);
+    console.log(`Body: A new user (${userEmail}, student: ${studentName}) has subscribed to ${activityTitle}.`);
+    console.log('------------------------');
     return { success: false, error: 'Email service is not configured.' };
   }
 
@@ -71,7 +70,5 @@ export async function sendConfirmationEmail(payload: ConfirmationEmailPayload) {
     console.error('Email sending with Brevo failed:', error);
     return { success: false, error: 'Failed to send email.' };
   }
-  */
 
-  return { success: true };
 }
