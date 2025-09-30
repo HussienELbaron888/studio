@@ -2,12 +2,12 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Logo } from '@/components/icons/logo';
 import { useLanguage } from '@/context/language-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Globe, LogIn, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
@@ -66,11 +66,11 @@ export function AppHeader() {
         <div className="flex-1 md:flex-grow-0" />
         
         <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-            <Logo className="h-7 w-7" />
+            <Image src="/AGS LOGO.png" alt="AGS Logo" width={40} height={40} />
             <h1 className="font-headline text-xl font-bold tracking-tight text-primary">
               Al-Nadi Hub
             </h1>
-            <Logo className="h-7 w-7" />
+            <Image src="/ACTIVITY.png" alt="Activity Logo" width={40} height={40} />
         </div>
 
         <div className="flex items-center gap-2">
