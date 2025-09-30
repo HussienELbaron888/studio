@@ -29,7 +29,7 @@ export default function MySubscriptionsPage() {
     if (!user) return;
 
     setLoading(true);
-    const subscriptionsRef = collection(db, 'user', user.uid, 'subscriptions');
+    const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
     const q = query(subscriptionsRef);
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {

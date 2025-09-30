@@ -17,7 +17,7 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDocRef = doc(db, 'user', firebaseUser.uid);
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {

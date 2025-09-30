@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -48,7 +49,7 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       // Add user to Firestore
-      await setDoc(doc(db, 'user', user.uid), {
+      await setDoc(doc(db, 'users', user.uid), {
         name: values.name,
         email: values.email,
         role: 'user', // Default role
