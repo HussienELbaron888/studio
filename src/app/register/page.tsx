@@ -48,10 +48,10 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       // Add user to Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+      await setDoc(doc(db, 'user', user.uid), {
         name: values.name,
         email: values.email,
-        role: 'user', // Default role
+        user: 'user', // Default role
       });
 
       toast({
@@ -101,7 +101,7 @@ export default function RegisterPage() {
                       <Input type="email" placeholder="email@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </Item>
                 )}
               />
               <FormField
@@ -114,7 +114,7 @@ export default function RegisterPage() {
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </Item>
                 )}
               />
               <FormField
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </Item>
                 )}
               />
               <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={isSubmitting}>

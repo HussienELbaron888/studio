@@ -17,13 +17,13 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDocRef = doc(db, 'user', firebaseUser.uid);
         
         const unsubscribeSnapshot = onSnapshot(userDocRef, (userDoc) => {
           if (userDoc.exists()) {
             setUser({
               ...firebaseUser,
-              role: userDoc.data().role || 'user',
+              role: userDoc.data().user || 'user',
             });
           } else {
             // This might happen briefly when a user is created
