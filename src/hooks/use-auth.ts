@@ -1,13 +1,13 @@
 
 "use client"
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, DocumentData } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface AppUser extends User {
-  role: 'admin' | 'user' | null;
+  role: 'admin' | 'user';
 }
 
 export function useAuth() {
@@ -15,23 +15,20 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUser({
-              ...firebaseUser,
-              role: userDoc.data().role || 'user',
-            });
-          } else {
-            // User exists in Auth but not in Firestore, treat as regular user
-            setUser({ ...firebaseUser, role: 'user' });
-          }
-        } catch (error) {
-          console.error("Error fetching user role:", error);
-          setUser({ ...firebaseUser, role: 'user' }); // Fallback to user role on error
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as DocumentData;
+          setUser({
+            ...firebaseUser,
+            role: userData.role === 'admin' ? 'admin' : 'user',
+          });
+        } else {
+          // User exists in Auth but not in Firestore, treat as regular user
+          setUser({ ...firebaseUser, role: 'user' });
         }
       } else {
         setUser(null);
@@ -39,7 +36,7 @@ export function useAuth() {
       setLoading(false);
     });
 
-    return () => unsubscribeAuth();
+    return () => unsubscribe();
   }, []);
 
   return { user, loading };
