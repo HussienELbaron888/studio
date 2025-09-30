@@ -58,7 +58,11 @@ export function AppSidebar() {
   const { content, language } = useLanguage();
 
   return (
-    <Sidebar collapsible="icon" side={language === 'ar' ? 'right' : 'left'}>
+    <Sidebar
+      variant="floating"
+      collapsible="icon"
+      side={language === 'ar' ? 'right' : 'left'}
+    >
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2">
           <Logo className="size-7 text-primary" />
