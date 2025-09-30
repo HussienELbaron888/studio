@@ -169,7 +169,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         <FormField
             control={form.control}
             name="image"
-            render={({ field: { onChange, ...fieldProps } }) => (
+            render={({ field: { onChange, value, ...fieldProps } }) => (
                 <FormItem>
                 <FormLabel>{content.imageLabel}</FormLabel>
                 <FormControl>
