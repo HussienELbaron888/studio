@@ -72,25 +72,23 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-2">
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <SidebarInput placeholder="Search..." className="pl-9" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground rtl:left-auto rtl:right-3" />
+                <SidebarInput placeholder="Search..." className="pl-9 rtl:pl-0 rtl:pr-9" />
             </div>
         </div>
         <SidebarMenu className="flex-1 p-2 pt-0">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={content[item.key as keyof typeof content]}
-                >
-                  <>
-                    <item.icon />
-                    <span>{content[item.key as keyof typeof content]}</span>
-                  </>
-                </SidebarMenuButton>
-              </Link>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={content[item.key as keyof typeof content]}
+              >
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{content[item.key as keyof typeof content]}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

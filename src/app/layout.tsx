@@ -39,14 +39,14 @@ export default function RootLayout({
         <body className="font-body antialiased">
           <Toaster />
           <SidebarProvider>
-            <AppSidebar />
-            <div className="flex w-full flex-col">
-              <AppHeader />
-              <SidebarInset>
+            <div className="flex">
+              <AppSidebar />
+              <div className="flex w-full flex-col">
+                <AppHeader />
                 <main className="min-h-[calc(100vh-4rem)] bg-background pt-16">
-                  {children}
+                    {children}
                 </main>
-              </SidebarInset>
+              </div>
             </div>
           </SidebarProvider>
         </body>
