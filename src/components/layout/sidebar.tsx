@@ -65,7 +65,7 @@ export function AppSidebar() {
       collapsible="icon"
       className="z-30"
     >
-      <SidebarHeader className="border-b h-14">
+      <SidebarHeader className="border-b h-28">
         {/* Empty header as requested */}
       </SidebarHeader>
       <SidebarContent>
