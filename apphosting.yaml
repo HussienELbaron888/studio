@@ -5,6 +5,7 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+#This is a comment to trigger a new build
 gcs:
   - bucket: studio-3721710978-c50cb.appspot.com
     cors:
