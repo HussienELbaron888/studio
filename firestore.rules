@@ -3,44 +3,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
     // Helper function to check if a user is an admin
     function isAdmin() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Helper function to check if a user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Rules for the 'users' collection
+    // Users can read/write their own data. Admins can read anyone's data.
     match /users/{userId} {
-      // Users can read and write to their own document
       allow read, write: if request.auth.uid == userId;
-      // Admins can read any user document (for potential future use)
       allow get: if isAdmin();
     }
-
-    // Rules for public content like activities and trips
-    match /activities/{activityId} {
-      // Anyone can read activities
-      allow get, list: if true;
-      // Only admins can create, update, or delete activities
-      allow write: if isAdmin();
-    }
     
-    match /trips/{tripId} {
-      // Anyone can read trips
+    // Anyone can read activities, but only admins can write them.
+    match /activities/{activityId} {
       allow get, list: if true;
-      // Only admins can create, update, or delete trips
       allow write: if isAdmin();
     }
 
-    // Rules for user-specific subcollections, like subscriptions
+    // Anyone can read trips, but only admins can write them.
+    match /trips/{tripId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users can manage their own subscriptions.
     match /users/{userId}/subscriptions/{subscriptionId} {
-      // A user can manage their own subscriptions
       allow read, write, create, delete: if request.auth.uid == userId;
     }
   }
