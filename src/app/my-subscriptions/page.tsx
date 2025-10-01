@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, onSnapshot, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
-import { activities, Activity } from '@/lib/placeholder-data';
+import type { Activity } from '@/lib/types';
 import { ActivityCard } from '@/components/activities/activity-card';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,9 +32,25 @@ export default function MySubscriptionsPage() {
     const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
     const q = query(subscriptionsRef);
     
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const subscribedIds = querySnapshot.docs.map(doc => doc.data().activityId);
-      const userActivities = activities.filter(activity => subscribedIds.includes(activity.id));
+    const unsubscribe = onSnapshot(q, async (subscriptionsSnapshot) => {
+      const subscribedIds = subscriptionsSnapshot.docs.map(doc => doc.data().activityId);
+      
+      if (subscribedIds.length === 0) {
+        setSubscribedActivities([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch all activities and filter them client-side
+      const activitiesCollectionRef = collection(db, 'activities');
+      const activitiesSnapshot = await getDocs(activitiesCollectionRef);
+      const allActivities = activitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Activity));
+
+      const userActivities = allActivities.filter(activity => subscribedIds.includes(activity.id));
+      
       setSubscribedActivities(userActivities);
       setLoading(false);
     }, (error) => {
