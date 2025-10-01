@@ -1,13 +1,6 @@
 import { getFirestore, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 
-export function withTimeout<T>(p: Promise<T>, ms: number, label = "operation"): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
-    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
-  });
-}
-
 export type ActivityValues = {
   title_ar?: string; title_en?: string;
   description_ar?: string; description_en?: string;
@@ -30,9 +23,8 @@ export async function uploadImageAndSaveActivity(values: ActivityValues, file?: 
     const storageRef = ref(storage, imagePath);
     const metadata = { contentType: file.type || "application/octet-stream" };
 
-    console.time("upload");
-    await withTimeout(uploadBytes(storageRef, file, metadata), 15000, "uploadBytes");
-    console.timeEnd("upload");
+    // Upload without a manual timeout
+    await uploadBytes(storageRef, file, metadata);
   }
 
   const docBody = {
@@ -43,19 +35,13 @@ export async function uploadImageAndSaveActivity(values: ActivityValues, file?: 
     sessions: values.sessions ?? 0,
     price: values.price ?? 0,
     type: values.type || "general",
-    image: {
-      id: `img-${Date.now()}`,
-      description: values.description_en || "",
-      imageUrl: "",         
-      imageHint: "activity-cover"
-    },
+    image: null, // Keep image object null/simple, image_path is what matters
     image_path: imagePath,
     created_at: serverTimestamp(),
   };
 
-  console.time("doc");
-  await withTimeout(setDoc(activityRef, docBody), 15000, "setDoc");
-  console.timeEnd("doc");
+  // Save document without a manual timeout
+  await setDoc(activityRef, docBody);
 
   return { id: activityId, imagePath };
 }
