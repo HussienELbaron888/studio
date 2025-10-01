@@ -21,6 +21,9 @@ import {
   Shield,
   LogIn,
   Search,
+  Plane,
+  Calendar,
+  Star,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
@@ -38,6 +41,24 @@ const menuItems = [
     href: '/activities',
     icon: LayoutGrid,
     key: 'navActivities',
+    adminOnly: false,
+  },
+  {
+    href: '/trips',
+    icon: Plane,
+    key: 'navTrips',
+    adminOnly: false,
+  },
+    {
+    href: '/events',
+    icon: Calendar,
+    key: 'navEvents',
+    adminOnly: false,
+  },
+    {
+    href: '/talents',
+    icon: Star,
+    key: 'navTalents',
     adminOnly: false,
   },
   {

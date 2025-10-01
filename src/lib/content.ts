@@ -8,6 +8,9 @@ export const content = {
     // Sidebar
     navHome: 'Home',
     navActivities: 'Activities',
+    navTrips: 'Trips',
+    navEvents: 'Events',
+    navTalents: 'Talents',
     navGallery: 'Gallery',
     navContact: 'Contact Us',
     navDashboard: 'Dashboard',
@@ -79,6 +82,9 @@ export const content = {
     // Sidebar
     navHome: 'الرئيسية',
     navActivities: 'الأنشطة',
+    navTrips: 'الرحلات',
+    navEvents: 'الفعاليات',
+    navTalents: 'الموهوبين',
     navGallery: 'معرض الصور',
     navContact: 'اتصل بنا',
     navDashboard: 'لوحة التحكم',
