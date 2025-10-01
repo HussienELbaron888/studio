@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { uploadImageAndSaveActivity, ActivityValues } from "@/utils/robust-upload";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -19,10 +18,8 @@ type AddActivityFormProps = {
 };
 
 export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
-  const { content } = useLanguage();
   const { toast } = useToast();
 
-  // States for each form field
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
@@ -177,7 +174,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" layout="fill" objectFit="cover" />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
             <Button
               type="button"
               variant="destructive"
@@ -232,4 +229,3 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     </form>
   );
 }
-

@@ -1,32 +1,23 @@
 rules_version = '2';
+
+// 1. Grant public read access to all files.
+// 2. Grant write access to an image file if the user is an admin,
+//    the file is smaller than 10MB, and the file is an image.
 service firebase.storage {
   match /b/{bucket}/o {
-
-    function isSignedIn() { return request.auth != null; }
-    function isAdminByEmail() {
-      return isSignedIn()
-        && request.auth.token.email != null
-        && request.auth.token.email == "admin@ags-activity.com";
-    }
-    function isAdminByClaim() { return isSignedIn() && request.auth.token.admin == true; }
-    function isAdminByRole() {
-      return isSignedIn()
-        && exists(/databases/(default)/documents/users/$(request.auth.uid))
-        && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == "admin";
-    }
-    function isAdmin() { return isAdminByEmail() || isAdminByClaim() || isAdminByRole(); }
-
-    function isAllowedImage() {
-      return request.resource.contentType.matches('image/.*')
-          || request.resource.contentType == 'application/octet-stream';
+    function isAdmin() {
+      return exists(/databases/(default)/documents/users/$(request.auth.uid))
+          && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Allow public read for activity images; write restricted to admins
-    match /activities/{allPaths=**} {
+    match /{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin() && isAllowedImage() && request.resource.size < 10 * 1024 * 1024;
     }
-
-    match /{path=**} { allow read, write: if false; }
+    
+    match /activities/{allPaths=**} {
+      allow write: if request.auth != null && isAdmin()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
   }
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import { db, storage } from '@/lib/firebase';
 import type { Activity } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/context/language-context";
@@ -76,6 +77,9 @@ export function ManageActivities() {
                     <DialogContent className="sm:max-w-[525px]">
                         <DialogHeader>
                             <DialogTitle>{content.addActivity}</DialogTitle>
+                             <DialogDescription>
+                                Add a new activity to the list. Fill in the details below.
+                            </DialogDescription>
                         </DialogHeader>
                         <AddActivityForm setDialogOpen={setAddDialogOpen} />
                     </DialogContent>
