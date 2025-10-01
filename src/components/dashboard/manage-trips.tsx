@@ -15,11 +15,14 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash, Loader2 } from "lucide-react";
 import { AddTripForm } from "./add-trip-form";
+import { EditTripForm } from "./edit-trip-form";
 
 export function ManageTrips() {
     const { content, language } = useLanguage();
     const { toast } = useToast();
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+    const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+    const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [trips, setTrips] = useState<Trip[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -46,6 +49,11 @@ export function ManageTrips() {
 
         return () => unsubscribe();
     }, [toast]);
+    
+    const handleEditClick = (trip: Trip) => {
+        setSelectedTrip(trip);
+        setEditDialogOpen(true);
+    };
 
     const handleDelete = async (tripId: string, imagePath: string | null | undefined) => {
         setIsDeleting(tripId);
@@ -109,7 +117,7 @@ export function ManageTrips() {
                                     <TableCell>{trip.title[language as keyof typeof trip.title]}</TableCell>
                                     <TableCell>{trip.destination[language as keyof typeof trip.destination]}</TableCell>
                                     <TableCell className="text-right">
-                                         <Button variant="ghost" size="icon" disabled>
+                                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(trip)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <AlertDialog>
@@ -140,6 +148,22 @@ export function ManageTrips() {
                     </TableBody>
                 </Table>
             </div>
+             {selectedTrip && (
+                <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                    <DialogContent className="sm:max-w-[525px]">
+                        <DialogHeader>
+                            <DialogTitle>Edit Trip</DialogTitle>
+                            <DialogDescription>
+                                Make changes to your trip here. Click save when you're done.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <EditTripForm
+                            trip={selectedTrip}
+                            setDialogOpen={setEditDialogOpen}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }
