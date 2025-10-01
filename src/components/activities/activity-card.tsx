@@ -3,12 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, limit } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/types';
@@ -66,29 +66,30 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   }, [activity.image_path, activity.image?.imageUrl]);
 
   useEffect(() => {
-    if (!user || !user.uid) {
+    const uid = user?.uid;
+    if (!uid) {
       setIsSubscribed(false);
       return;
     };
 
-    const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
+    const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("activityId", "==", activity.id)
+      where("activityId", "==", activity.id),
+      where("userId", "==", uid),
+      limit(1)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setIsSubscribed(!querySnapshot.empty);
     }, (error) => {
-      if (error.code === 'permission-denied') {
-        // Silently ignore permission errors, which might happen briefly during auth state changes.
-        return;
+      if (error.code !== "permission-denied") {
+        console.error("Subscription check failed:", error);
       }
-      console.error("Subscription check failed:", error);
     });
 
     return () => unsubscribe();
-  }, [user, activity.id]);
+  }, [user?.uid, activity.id]);
 
   const schedule = activity.schedule?.[language as keyof typeof activity.schedule];
   const time = activity.time;
@@ -173,9 +174,12 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
                   {isSubscribed ? content.subscribedButton : content.subscribeButton}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px]" aria-describedby="activity-sub-desc">
                 <DialogHeader>
                   <DialogTitle>{activity.title[language as keyof typeof activity.title]}</DialogTitle>
+                   <DialogDescription id="activity-sub-desc" className="sr-only">
+                    نموذج الاشتراك في النشاط
+                  </DialogDescription>
                 </DialogHeader>
                 <SubscriptionForm 
                   setDialogOpen={setDialogOpen} 

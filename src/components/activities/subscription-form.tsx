@@ -54,15 +54,19 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
     }
 
     try {
-      const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
-      await addDoc(subscriptionsRef, {
-        userId: user.uid, // Add this for security rules
-        activityId,
+      const subscriptionsRef = collection(db, 'subscriptions');
+      const payload = {
+        ...values,
+        userId: user.uid,
+        activityId: activityId,
         itemTitle: activityTitle,
         itemType: 'activity',
-        ...values,
         subscribedAt: serverTimestamp(),
-      });
+      };
+      
+      console.log("Activity subscription payload:", payload);
+      await addDoc(subscriptionsRef, payload);
+
 
       // Send confirmation email via Genkit Flow
       const emailResult = await sendEmail({

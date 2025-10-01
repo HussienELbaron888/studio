@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, query, onSnapshot, Timestamp, where } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
@@ -32,14 +32,15 @@ export default function MySubscriptionsPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (!user) {
+    const uid = user?.uid;
+    if (!uid) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
-    const q = query(subscriptionsRef);
+    const subscriptionsRef = collection(db, 'subscriptions');
+    const q = query(subscriptionsRef, where("userId", "==", uid));
     
     const unsubscribe = onSnapshot(q, (subscriptionsSnapshot) => {
       const subsData = subscriptionsSnapshot.docs.map(doc => ({
@@ -51,7 +52,6 @@ export default function MySubscriptionsPage() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching subscriptions:", error);
-      // Silently ignore permission errors, which might happen briefly during auth state changes.
       if (error.code === 'permission-denied') {
          console.warn("Permission denied for subscriptions. This may be expected.");
       }
@@ -59,7 +59,7 @@ export default function MySubscriptionsPage() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   if (authLoading || loading) {
     return (

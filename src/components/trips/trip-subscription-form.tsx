@@ -54,15 +54,17 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
     }
 
     try {
-      const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
-      await addDoc(subscriptionsRef, {
-        userId: user.uid, // Add this for security rules
-        tripId,
+      const subscriptionsRef = collection(db, 'subscriptions');
+      const payload = {
+        ...values,
+        userId: user.uid,
+        tripId: tripId,
         itemTitle: tripTitle,
         itemType: 'trip',
-        ...values,
         subscribedAt: serverTimestamp(),
-      });
+      };
+      console.log("Trip subscription payload:", payload);
+      await addDoc(subscriptionsRef, payload);
 
       const emailResult = await sendEmail({
         studentName: values.studentName,

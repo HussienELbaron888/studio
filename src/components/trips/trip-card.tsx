@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, limit } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Trip } from '@/lib/types';
@@ -62,29 +62,30 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   }, [trip.image_path, (trip as any).image?.imageUrl]);
 
   useEffect(() => {
-    if (!user || !user.uid) {
+    const uid = user?.uid;
+    if (!uid) {
       setIsSubscribed(false);
       return;
     };
 
-    const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
+    const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("tripId", "==", trip.id)
+      where("tripId", "==", trip.id),
+      where("userId", "==", uid),
+      limit(1)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setIsSubscribed(!querySnapshot.empty);
     }, (error) => {
-       if (error.code === 'permission-denied') {
-        // Silently ignore permission errors, which might happen briefly during auth state changes.
-        return;
+       if (error.code !== "permission-denied") {
+        console.error("Subscription check failed:", error);
       }
-      console.error("Subscription check failed:", error);
     });
 
     return () => unsubscribe();
-  }, [user, trip.id]);
+  }, [user?.uid, trip.id]);
 
   const title = trip.title[language as keyof typeof trip.title];
   const destination = trip.destination[language as keyof typeof trip.destination];
@@ -143,9 +144,12 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
                   {isSubscribed ? content.subscribedButton : content.subscribeButton}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px]" aria-describedby="trip-sub-desc">
                 <DialogHeader>
                   <DialogTitle>{trip.title[language as keyof typeof trip.title]}</DialogTitle>
+                  <DialogDescription id="trip-sub-desc" className="sr-only">
+                    نموذج الاشتراك في الرحلة
+                  </DialogDescription>
                 </DialogHeader>
                 <TripSubscriptionForm 
                   setDialogOpen={setDialogOpen} 
