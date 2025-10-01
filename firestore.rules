@@ -1,23 +1,27 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper Functions
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isUser(uid) {
+    function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
 
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Check if user is an admin by looking at their custom claim or a document in the users collection.
+      // This allows for flexibility. You can set a custom claim or just update the user's document.
+      return isSignedIn() && (
+        request.auth.token.role == "admin" ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+      );
     }
 
-    match /users/{uid} {
-      allow read, write: if isUser(uid) || isAdmin();
-    }
-
+    // Rules for collections
     match /activities/{activityId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -28,8 +32,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /users/{uid}/subscriptions/{subscriptionId} {
-      allow read, create: if isUser(uid);
+    match /users/{userId} {
+      // Admins can read/write any user document.
+      // Users can read/write their own document.
+      allow read, write: if isAdmin() || isOwner(userId);
+      
+      // Rules for user's subscriptions subcollection
+      match /subscriptions/{subscriptionId} {
+        // Admins can read all subscriptions.
+        // Users can read and create their own subscriptions.
+        allow read, create: if isAdmin() || isOwner(userId);
+        // Only admins or the owner can delete a subscription.
+        allow delete: if isAdmin() || isOwner(userId);
+      }
     }
   }
 }
