@@ -2,42 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if the user is signed in
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the user is an admin based on custom claims
+    
+    // Function to check if the user is an admin
     function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
+      // Check if the user is authenticated and if their document in 'users' collection has role 'admin'
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Rules for the 'users' collection
+    // Rules for users collection
     match /users/{userId} {
-      // An admin can read any user document
-      // A user can read their own document
-      allow read: if isAdmin() || request.auth.uid == userId;
-      
-      // A user can update their own document
-      allow update: if request.auth.uid == userId;
-
-      // Allow anyone to create their own user document during registration
-      allow create: if request.auth.uid == userId;
+      // Admins can read/write any user document. Users can only read/write their own.
+      allow read, write: if request.auth.uid == userId || isAdmin();
     }
 
-    // Rules for 'activities' and 'trips' collections
-    match /{collection}/{docId} where collection in ['activities', 'trips'] {
-      // Anyone can read (get, list)
-      allow get, list: if true;
-      // Only admins can create, update, or delete
+    // Rules for activities collection
+    match /activities/{activityId} {
+      // Anyone can read activities
+      allow read: if true;
+      // Only admins can create, update, delete activities
       allow write: if isAdmin();
     }
 
-    // Rules for user subscriptions subcollection
+    // Rules for trips collection
+    match /trips/{tripId} {
+      // Anyone can read trips
+      allow read: if true;
+      // Only admins can create, update, delete trips
+      allow write: if isAdmin();
+    }
+
+    // Rules for subscriptions subcollection
     match /users/{userId}/subscriptions/{subscriptionId} {
-      // Users can read, create, and delete their own subscriptions
-      allow read, create, delete: if request.auth.uid == userId;
+      // A user can only read and create their own subscriptions.
+      allow read, create: if request.auth.uid == userId;
+      // No one can update or delete subscriptions directly through client.
+      allow update, delete: if false;
     }
   }
 }

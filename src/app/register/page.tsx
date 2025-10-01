@@ -48,10 +48,11 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Add user to Firestore
+      // Add user to Firestore with default role
       await setDoc(doc(db, 'users', user.uid), {
         name: values.name,
         email: values.email,
+        role: 'user', // Set default role to 'user'
       });
 
       toast({
