@@ -16,37 +16,16 @@ service cloud.firestore {
     }
     function isAdmin() { return isAdminByEmail() || isAdminByRole(); }
 
-    match /activities/{doc}            { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/activities/{doc}  { allow read: if true; allow write: if isAdmin(); }
-
-    match /trips/{doc}                 { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/trips/{doc}       { allow read: if true; allow write: if isAdmin(); }
-
-    match /banners/{doc}               { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/banners/{doc}     { allow read: if true; allow write: if isAdmin(); }
-
-    match /gallery/{doc}               { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/gallery/{doc}     { allow read: if true; allow write: if isAdmin(); }
-
-    match /suppliers/{doc}             { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/suppliers/{doc}   { allow read: if true; allow write: if isAdmin(); }
-
-    match /settings/{doc}              { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/settings/{doc}    { allow read: if true; allow write: if isAdmin(); }
+    match /activities/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /trips/{doc} { allow read: if true; allow write: if isAdmin(); }
     
-    match /users/{uid}/subscriptions/{subId} {
-        allow read, create: if request.auth.uid == uid;
-        allow write: if isAdmin();
-    }
-
-    match /trips/{tripId}/registrations/{regId} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
-      allow create, update, delete: if isAdmin();
-    }
-
     match /users/{uid} {
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+    
+    match /users/{uid}/subscriptions/{subId} {
+      allow read, create: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }
