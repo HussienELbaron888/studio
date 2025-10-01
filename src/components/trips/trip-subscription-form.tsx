@@ -15,7 +15,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { sendEmail } from "@/ai/flows/send-email-flow";
 
-
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
   className: z.string().min(1, { message: "Class is required." }),
@@ -68,7 +67,7 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
         studentName: values.studentName,
         itemTitle: tripTitle,
         userEmail: user.email,
-        itemType: 'Trip',
+        itemType: 'Trip'
       });
 
       if (emailResult.success) {
@@ -85,11 +84,11 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       }
 
       setDialogOpen(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving subscription:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save subscription. Please try again.",
+        description: "Failed to save subscription. Please try again.",
         variant: "destructive",
       });
     }

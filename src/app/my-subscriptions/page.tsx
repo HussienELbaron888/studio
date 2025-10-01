@@ -3,24 +3,26 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot, getDoc, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
-import type { Activity, Trip } from '@/lib/types';
-import { ActivityCard } from '@/components/activities/activity-card';
-import { TripCard } from '@/components/trips/trip-card';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-type SubscribedItem = (Activity & { itemType: 'activity' }) | (Trip & { itemType: 'trip' });
+interface Subscription {
+  id: string;
+  itemTitle: string;
+  itemType: 'activity' | 'trip';
+  subscribedAt: Timestamp;
+}
 
 export default function MySubscriptionsPage() {
-  const { content } = useLanguage();
+  const { content, language } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [subscribedItems, setSubscribedItems] = useState<SubscribedItem[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,30 +38,21 @@ export default function MySubscriptionsPage() {
     const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
     const q = query(subscriptionsRef);
     
-    const unsubscribe = onSnapshot(q, async (subscriptionsSnapshot) => {
-      const itemPromises = subscriptionsSnapshot.docs.map(async (subDoc) => {
-        const subData = subDoc.data();
-        const itemType = subData.itemType; // 'activity' or 'trip'
-        const itemId = subData.activityId || subData.tripId;
-
-        if (!itemId || !itemType) return null;
-        
-        const collectionName = itemType === 'activity' ? 'activities' : 'trips';
-        const itemRef = doc(db, collectionName, itemId);
-        const itemSnap = await getDoc(itemRef);
-
-        if (itemSnap.exists()) {
-          return { id: itemSnap.id, ...itemSnap.data(), itemType } as SubscribedItem;
-        }
-        return null;
-      });
-
-      const userItems = (await Promise.all(itemPromises)).filter(Boolean) as SubscribedItem[];
+    const unsubscribe = onSnapshot(q, (subscriptionsSnapshot) => {
+      const subsData = subscriptionsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Subscription));
       
-      setSubscribedItems(userItems);
+      setSubscriptions(subsData);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching subscriptions:", error);
+      if (error.code === 'permission-denied') {
+        // Silently ignore permission errors on this page
+        setLoading(false);
+        return;
+      }
       setLoading(false);
     });
 
@@ -74,8 +67,8 @@ export default function MySubscriptionsPage() {
     );
   }
   
-  const activities = subscribedItems.filter(item => item.itemType === 'activity') as (Activity & { itemType: 'activity' })[];
-  const trips = subscribedItems.filter(item => item.itemType === 'trip') as (Trip & { itemType: 'trip' })[];
+  const activities = subscriptions.filter(item => item.itemType === 'activity');
+  const trips = subscriptions.filter(item => item.itemType === 'trip');
 
   return (
     <div className="container mx-auto p-4 md:p-8 flex-grow">
@@ -83,18 +76,23 @@ export default function MySubscriptionsPage() {
         {content.mySubscriptionsTitle}
       </h1>
       
-      {subscribedItems.length > 0 ? (
+      {subscriptions.length > 0 ? (
         <div className="space-y-12">
             {activities.length > 0 && (
                 <div>
                     <h2 className="font-headline text-2xl font-bold md:text-3xl mb-6">{content.navActivities}</h2>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {activities.map((activity) => (
-                            <ActivityCard 
-                                key={activity.id} 
-                                activity={activity} 
-                                imageSizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                            />
+                           <Card key={activity.id}>
+                               <CardHeader>
+                                   <CardTitle>{activity.itemTitle}</CardTitle>
+                               </CardHeader>
+                               <CardContent>
+                                   <p className="text-sm text-muted-foreground">
+                                     {content.subscribedButton}
+                                   </p>
+                               </CardContent>
+                           </Card>
                         ))}
                     </div>
                 </div>
@@ -105,13 +103,18 @@ export default function MySubscriptionsPage() {
             {trips.length > 0 && (
                  <div>
                     <h2 className="font-headline text-2xl font-bold md:text-3xl mb-6">{content.navTrips}</h2>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {trips.map((trip) => (
-                            <TripCard 
-                                key={trip.id} 
-                                trip={trip} 
-                                imageSizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                            />
+                           <Card key={trip.id}>
+                               <CardHeader>
+                                   <CardTitle>{trip.itemTitle}</CardTitle>
+                               </CardHeader>
+                               <CardContent>
+                                   <p className="text-sm text-muted-foreground">
+                                     {content.subscribedButton}
+                                   </p>
+                               </CardContent>
+                           </Card>
                         ))}
                     </div>
                 </div>

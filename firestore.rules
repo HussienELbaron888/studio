@@ -1,56 +1,42 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
+    function isSignedIn() { return request.auth != null; }
     function isAdmin() {
-      // First, check for the user's role in the 'users' collection.
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      // Then, check against a list of hardcoded admin emails as a fallback.
-      let adminEmails = ["hussienelbaron888@gmail.com"];
-      
-      return (request.auth != null && userRole == 'admin') || (request.auth != null && request.auth.token.email in adminEmails);
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)/profile);
     }
 
-    // Publicly readable collections
-    match /activities/{docId} {
+    // Public content
+    match /activities/{activityId} {
       allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /trips/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /gallery/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-     match /events/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-     match /talents/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-     match /slider/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
-    // User-specific data
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isAdmin();
-      
-      // Subscriptions subcollection
-      match /subscriptions/{subscriptionId} {
-        allow read, create: if request.auth.uid == userId;
-        allow update, delete: if isAdmin() || request.auth.uid == userId;
-      }
+    match /trips/{tripId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // User subscriptions (activities + trips + anything else)
+    match /users/{uid}/subscriptions/{subId} {
+      // STRICTER: only allow a signed-in user to write to *their own* subscriptions
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      // Allow the owner to read & delete their own subscription, or any admin
+      allow read, delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow update: if false;
+    }
+
+    // Admin profiles
+    match /admins/{adminUid}/profile {
+      allow read, write: if isAdmin();
+    }
+
+    // Deny everything else by default
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }
