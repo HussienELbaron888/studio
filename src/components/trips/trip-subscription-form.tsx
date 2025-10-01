@@ -4,16 +4,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useLanguage } from "@/context/language-context";
+import { useLanguage } from "@/context/language-content";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { sendEmail } from "@/ai/flows/send-email-flow";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -54,41 +51,34 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
     }
 
     try {
-      const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
-      await addDoc(subscriptionsRef, {
-        tripId,
-        itemTitle: tripTitle,
-        itemType: 'trip',
-        ...values,
-        subscribedAt: serverTimestamp(),
+      const response = await fetch('/api/trips/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              ...values,
+              tripId,
+              userId: user.uid,
+              userEmail: user.email,
+          })
       });
 
-      const emailResult = await sendEmail({
-        studentName: values.studentName,
-        itemTitle: tripTitle,
-        userEmail: user.email,
-        itemType: 'Trip'
-      });
+      const data = await response.json();
 
-      if (emailResult.success) {
-        toast({
-            title: content.subscriptionSuccessTitle,
-            description: content.subscriptionSuccessMessage,
-        });
-      } else {
-         toast({
-            title: "Subscription successful, but email failed",
-            description: `Could not send confirmation email. Reason: ${emailResult.error}`,
-            variant: "destructive"
-        });
+      if (!response.ok || !data.ok) {
+          throw new Error(data.message || 'Failed to subscribe.');
       }
+      
+      toast({
+        title: content.subscriptionSuccessTitle,
+        description: content.subscriptionSuccessMessage,
+      });
 
       setDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving subscription:", error);
       toast({
         title: "Error",
-        description: "Failed to save subscription. Please try again.",
+        description: error.message || "Failed to save subscription. Please try again.",
         variant: "destructive",
       });
     }
