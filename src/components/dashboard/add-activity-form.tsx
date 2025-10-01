@@ -38,7 +38,6 @@ type AddActivityFormProps = {
 export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,35 +56,42 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     },
   });
 
+  const { formState: { isSubmitting } } = form;
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      form.setValue("image", file); // Inform react-hook-form about the file
+    } else {
+      setImageFile(null);
+      form.setValue("image", null);
     }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    
     try {
-      // 1. Prepare DocRef to get an ID
+      // 1. Prepare DocRef to get a unique ID before any upload
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
       let imagePath: string | null = null;
-      
-      // 2. Upload image if it exists
+      let imageUrl: string | null = null; // Will remain null or empty
+
+      // 2. Upload image if it exists, but DO NOT get the download URL here
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
         imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
-        const storageRef = ref(storage, imagePath);
+        const storageReference = ref(storage, imagePath);
         
-        await uploadBytes(storageRef, imageFile, {
+        await uploadBytes(storageReference, imageFile, {
             contentType: imageFile.type || "application/octet-stream" 
         });
+        // We specifically DO NOT call getDownloadURL here to make the upload process faster and more reliable.
+        // The URL will be resolved on the client-side when the activity card is displayed.
       }
 
-      // 3. Save the document
+      // 3. Save the document to Firestore with the generated ID
       await setDoc(activityRef, {
         title: { en: values.title_en, ar: values.title_ar },
         description: { en: values.description_en, ar: values.description_ar },
@@ -95,12 +101,12 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         price: values.price,
         type: values.type,
         image: imageFile ? {
-            id: `custom-${Date.now()}`,
+            id: `custom-${activityId}`,
             description: values.description_en,
-            imageUrl: "", // Will be empty, resolved on client
+            imageUrl: "", // Left empty intentionally.
             imageHint: "custom activity"
         } : null,
-        image_path: imagePath, // Save the path
+        image_path: imagePath, // Save the storage path
         created_at: serverTimestamp(),
       });
 
@@ -109,17 +115,16 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         description: "تمت إضافة النشاط بنجاح.",
       });
       form.reset();
+      setImageFile(null);
       setDialogOpen(false);
 
     } catch (error: any) {
       console.error("Failed to add activity:", error);
       toast({
-        title: "خطأ",
-        description: `فشلت عملية الإضافة. الخطأ: ${error.code || error.message}`,
+        title: "خطأ في الإضافة",
+        description: `فشلت العملية. الخطأ: ${error.code || error.message}`,
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -182,7 +187,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         <FormField
             control={form.control}
             name="image"
-            render={() => (
+            render={({ field }) => (
                 <FormItem>
                 <FormLabel>{content.imageLabel}</FormLabel>
                 <FormControl>
@@ -205,3 +210,5 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     </Form>
   );
 }
+
+    
