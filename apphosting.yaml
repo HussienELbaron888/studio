@@ -5,3 +5,18 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+gcs:
+  - bucket: studio-3721710978-c50cb.appspot.com
+    cors:
+      - origin:
+          - '*'
+        method:
+          - GET
+          - HEAD
+          - PUT
+          - POST
+          - DELETE
+        responseHeader:
+          - Content-Type
+          - Access-Control-Allow-Origin
+        maxAgeSeconds: 3600
