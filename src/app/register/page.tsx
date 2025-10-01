@@ -52,7 +52,6 @@ export default function RegisterPage() {
       await setDoc(doc(db, 'users', user.uid), {
         name: values.name,
         email: values.email,
-        role: 'user', // Default role
       });
 
       toast({
