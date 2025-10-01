@@ -23,7 +23,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
 
-  // State management with useState
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
   const [descriptionAr, setDescriptionAr] = useState("");
@@ -57,6 +56,8 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     setPrice(0);
     setType("Free");
     setImageFile(null);
+    const fileInput = document.getElementById('image') as HTMLInputElement;
+    if(fileInput) fileInput.value = "";
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -69,8 +70,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       const activityId = activityRef.id;
 
       let imagePath: string | null = null;
-      let imageUrl: string | null = null; // Will be empty as we resolve on client
-
+      
       // 2. Upload image if it exists
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
@@ -80,7 +80,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         await uploadBytes(storageReference, imageFile, {
           contentType: imageFile.type || "application/octet-stream",
         });
-        imageUrl = ""; // Leave empty, card will resolve it from image_path
       }
 
       // 3. Save the document to Firestore
@@ -95,7 +94,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         image: imageFile ? {
             id: `custom-${activityId}`,
             description: descriptionEn,
-            imageUrl: imageUrl || "",
+            imageUrl: "", // Left empty, card will resolve it
             imageHint: "custom activity"
         } : null,
         image_path: imagePath,
@@ -204,5 +203,3 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     </form>
   );
 }
-
-    
