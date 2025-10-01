@@ -1,3 +1,4 @@
+
 // src/ai/flows/send-email-flow.ts
 'use server';
 
@@ -14,7 +15,8 @@ import * as Brevo from '@getbrevo/brevo';
 
 const SendEmailInputSchema = z.object({
   studentName: z.string().describe('The name of the student subscribing.'),
-  activityTitle: z.string().describe('The title of the activity.'),
+  itemTitle: z.string().describe('The title of the item (activity or trip).'),
+  itemType: z.string().describe('The type of item (e.g., "Activity", "Trip").'),
   userEmail: z.string().email().describe('The email of the user to send the confirmation to.'),
 });
 export type SendEmailInput = z.infer<typeof SendEmailInputSchema>;
@@ -33,7 +35,7 @@ const sendEmailFlow = ai.defineFlow(
     }),
   },
   async (payload) => {
-    const { studentName, activityTitle, userEmail } = payload;
+    const { studentName, itemTitle, itemType, userEmail } = payload;
     const brevoApiKey = process.env.BREVO_API_KEY;
 
     if (!brevoApiKey || brevoApiKey === 'YOUR_BREVO_API_KEY') {
@@ -55,16 +57,16 @@ const sendEmailFlow = ai.defineFlow(
       // Send to User
       sendSmtpEmail.to = [{ email: userEmail, name: studentName }];
       sendSmtpEmail.sender = { email: senderEmail, name: 'Al-Nadi Activities' };
-      sendSmtpEmail.subject = `Subscription Confirmation: ${activityTitle}`;
-      sendSmtpEmail.htmlContent = `<html><body><h1>Hello ${studentName}!</h1><p>You have successfully subscribed to the activity: <strong>${activityTitle}</strong>.</p></body></html>`;
-      sendSmtpEmail.textContent = `Hello ${studentName}! You have successfully subscribed to the activity: ${activityTitle}.`;
+      sendSmtpEmail.subject = `Subscription Confirmation: ${itemTitle}`;
+      sendSmtpEmail.htmlContent = `<html><body><h1>Hello ${studentName}!</h1><p>You have successfully subscribed to the ${itemType.toLowerCase()}: <strong>${itemTitle}</strong>.</p></body></html>`;
+      sendSmtpEmail.textContent = `Hello ${studentName}! You have successfully subscribed to the ${itemType.toLowerCase()}: ${itemTitle}.`;
       await apiInstance.sendTransacEmail(sendSmtpEmail);
       
       // Send to Admin
       sendSmtpEmail.to = [{ email: adminEmail }];
-      sendSmtpEmail.subject = `New Subscription: ${activityTitle}`;
-      sendSmtpEmail.htmlContent = `<html><body><h1>New Subscription</h1><p>A new user has subscribed:</p><ul><li>Email: ${userEmail}</li><li>Student: ${studentName}</li><li>Activity: ${activityTitle}</li></ul></body></html>`;
-      sendSmtpEmail.textContent = `New subscription for ${activityTitle} from ${userEmail} (Student: ${studentName}).`;
+      sendSmtpEmail.subject = `New Subscription: ${itemTitle}`;
+      sendSmtpEmail.htmlContent = `<html><body><h1>New Subscription</h1><p>A new user has subscribed:</p><ul><li>Email: ${userEmail}</li><li>Student: ${studentName}</li><li>${itemType}: ${itemTitle}</li></ul></body></html>`;
+      sendSmtpEmail.textContent = `New subscription for ${itemTitle} (${itemType}) from ${userEmail} (Student: ${studentName}).`;
       await apiInstance.sendTransacEmail(sendSmtpEmail);
 
       return { success: true };

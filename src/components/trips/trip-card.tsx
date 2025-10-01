@@ -3,13 +3,20 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useLanguage } from '@/context/language-context';
+import { useAuth } from '@/hooks/use-auth';
 import type { Trip } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
+import { TripSubscriptionForm } from './trip-subscription-form';
+
 
 type TripCardProps = {
   trip: Trip;
@@ -17,7 +24,10 @@ type TripCardProps = {
 };
 
 export function TripCard({ trip, imageSizes }: TripCardProps) {
-  const { language } = useLanguage();
+  const { language, content } = useLanguage();
+  const { user } = useAuth();
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
@@ -50,6 +60,25 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
 
     return () => { cancel = true; };
   }, [trip.image_path, (trip as any).image?.imageUrl]);
+
+  useEffect(() => {
+    if (!user) {
+      setIsSubscribed(false);
+      return;
+    };
+
+    const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
+    const q = query(
+      subscriptionsRef,
+      where("tripId", "==", trip.id)
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      setIsSubscribed(!querySnapshot.empty);
+    });
+
+    return () => unsubscribe();
+  }, [user, trip.id]);
 
   const title = trip.title[language as keyof typeof trip.title];
   const destination = trip.destination[language as keyof typeof trip.destination];
@@ -101,6 +130,25 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
               </div>
             )}
           </div>
+            {user && (
+            <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full mt-auto" disabled={isSubscribed}>
+                  {isSubscribed ? content.subscribedButton : content.subscribeButton}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>{trip.title[language as keyof typeof trip.title]}</DialogTitle>
+                </DialogHeader>
+                <TripSubscriptionForm 
+                  setDialogOpen={setDialogOpen} 
+                  tripTitle={trip.title.en} 
+                  tripId={trip.id}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

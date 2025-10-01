@@ -23,11 +23,11 @@ const formSchema = z.object({
 
 type SubscriptionFormProps = {
   setDialogOpen: (open: boolean) => void;
-  activityTitle: string;
-  activityId: string;
+  tripTitle: string;
+  tripId: string;
 }
 
-export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: SubscriptionFormProps) {
+export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: SubscriptionFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,19 +56,18 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
     try {
       const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
       await addDoc(subscriptionsRef, {
-        activityId,
-        itemTitle: activityTitle,
-        itemType: 'activity',
+        tripId,
+        itemTitle: tripTitle,
+        itemType: 'trip',
         ...values,
         subscribedAt: serverTimestamp(),
       });
 
-      // Send confirmation email via Genkit Flow
       const emailResult = await sendEmail({
         studentName: values.studentName,
-        itemTitle: activityTitle,
+        itemTitle: tripTitle,
         userEmail: user.email,
-        itemType: 'Activity',
+        itemType: 'Trip'
       });
 
       if (emailResult.success) {
