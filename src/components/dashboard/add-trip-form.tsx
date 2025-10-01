@@ -4,34 +4,27 @@
 import { useState, useRef, ChangeEvent, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, X } from "lucide-react";
-import { uploadImageAndSaveActivity, ActivityValues } from "@/utils/robust-upload";
+import { saveTrip, TripValues } from "@/utils/saveTrip";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/context/language-context";
 
-type AddActivityFormProps = {
+type AddTripFormProps = {
   setDialogOpen: (open: boolean) => void;
 };
 
-export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
+export function AddTripForm({ setDialogOpen }: AddTripFormProps) {
   const { toast } = useToast();
-  const { content } = useLanguage();
 
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
-  const [descriptionAr, setDescriptionAr] = useState("");
-  const [descriptionEn, setDescriptionEn] = useState("");
+  const [destinationAr, setDestinationAr] = useState("");
+  const [destinationEn, setDestinationEn] = useState("");
   const [scheduleAr, setScheduleAr] = useState("");
   const [scheduleEn, setScheduleEn] = useState("");
-  const [time, setTime] = useState("");
-  const [sessions, setSessions] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
-  const [type, setType] = useState<"Paid" | "Free">("Free");
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -83,28 +76,25 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const values: ActivityValues = {
+    const values: TripValues = {
       title_ar: titleAr, title_en: titleEn,
-      description_ar: descriptionAr, description_en: descriptionEn,
+      destination_ar: destinationAr, destination_en: destinationEn,
       schedule_ar: scheduleAr, schedule_en: scheduleEn,
-      time: time,
-      sessions: Number(sessions) || 0,
       price: Number(price) || 0,
-      type: type,
     };
     
     try {
-      await uploadImageAndSaveActivity(values, imageFile);
+      await saveTrip(values, imageFile);
       toast({
         title: "Success",
-        description: "Activity added successfully!",
+        description: "Trip added successfully!",
       });
       setDialogOpen(false);
     } catch (error: any) {
       console.error("Submission failed:", error);
       toast({
         title: "Error",
-        description: `Failed to add activity: ${error.message}`,
+        description: `Failed to add trip: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -116,61 +106,38 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto p-1 pr-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="title-ar">{content.activityTitleLabel} (العربية)</Label>
+          <Label htmlFor="title-ar">{content.tripTitleLabel} (العربية)</Label>
           <Input id="title-ar" value={titleAr} onChange={e => setTitleAr(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="title-en">Activity Title (English)</Label>
+          <Label htmlFor="title-en">Trip Title (English)</Label>
           <Input id="title-en" value={titleEn} onChange={e => setTitleEn(e.target.value)} required />
         </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="description-ar">{content.activityDescriptionLabel} (العربية)</Label>
-        <Textarea id="description-ar" value={descriptionAr} onChange={e => setDescriptionAr(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description-en">Description (English)</Label>
-        <Textarea id="description-en" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="destination-ar">{content.tripDestinationLabel} (العربية)</Label>
+          <Input id="destination-ar" value={destinationAr} onChange={e => setDestinationAr(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="destination-en">Destination (English)</Label>
+          <Input id="destination-en" value={destinationEn} onChange={e => setDestinationEn(e.target.value)} required />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          <div className="space-y-2">
-          <Label htmlFor="schedule-ar">المواعيد (العربية)</Label>
-          <Input id="schedule-ar" placeholder="مثال: الأحد والثلاثاء" value={scheduleAr} onChange={e => setScheduleAr(e.target.value)} />
+          <Label htmlFor="schedule-ar">{content.tripScheduleLabel} (العربية)</Label>
+          <Input id="schedule-ar" placeholder="مثال: كل يوم سبت" value={scheduleAr} onChange={e => setScheduleAr(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="schedule-en">Schedule (English)</Label>
-          <Input id="schedule-en" placeholder="e.g., Sunday & Tuesday" value={scheduleEn} onChange={e => setScheduleEn(e.target.value)} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="time">الوقت</Label>
-          <Input id="time" placeholder="4:00 PM - 5:00 PM" value={time} onChange={e => setTime(e.target.value)} />
-        </div>
-         <div className="space-y-2">
-          <Label htmlFor="sessions">عدد الحصص</Label>
-          <Input id="sessions" type="number" value={sessions} onChange={e => setSessions(e.target.value === '' ? '' : Number(e.target.value))} />
+          <Input id="schedule-en" placeholder="e.g., Every Saturday" value={scheduleEn} onChange={e => setScheduleEn(e.target.value)} />
         </div>
       </div>
       <div className="space-y-2">
-        <Label>النوع</Label>
-        <RadioGroup value={type} onValueChange={(value: "Free" | "Paid") => setType(value)} className="flex gap-4">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Free" id="type-free" />
-            <Label htmlFor="type-free">مجاني</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Paid" id="type-paid" />
-            <Label htmlFor="type-paid">مدفوع</Label>
-          </div>
-        </RadioGroup>
+        <Label htmlFor="price">{content.priceLabel}</Label>
+        <Input id="price" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
       </div>
-      {type === 'Paid' && (
-        <div className="space-y-2">
-          <Label htmlFor="price">{content.priceLabel}</Label>
-          <Input id="price" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
-        </div>
-      )}
 
       <div className="space-y-2">
         <Label>إدراج صورة</Label>
@@ -225,7 +192,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
             جاري الحفظ...
           </>
         ) : (
-          "حفظ النشاط"
+          "حفظ الرحلة"
         )}
       </Button>
     </form>

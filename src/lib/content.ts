@@ -1,3 +1,4 @@
+
 export const content = {
   en: {
     // Header
@@ -58,6 +59,11 @@ export const content = {
     addActivity: 'Add Activity',
     activityTitleLabel: 'Activity Title',
     activityDescriptionLabel: 'Description',
+    addTrip: 'Add Trip',
+    tripTitleLabel: 'Trip Title',
+    tripDestinationLabel: 'Destination',
+    tripScheduleLabel: 'Schedule',
+    priceLabel: 'Price (SAR)',
     suggestTags: 'Suggest Tags',
     suggestedTags: 'Suggested Tags',
     submit: 'Submit',
@@ -132,6 +138,11 @@ export const content = {
     addActivity: 'إضافة نشاط',
     activityTitleLabel: 'عنوان النشاط',
     activityDescriptionLabel: 'الوصف',
+    addTrip: 'إضافة رحلة',
+    tripTitleLabel: 'عنوان الرحلة',
+    tripDestinationLabel: 'الوجهة',
+    tripScheduleLabel: 'الموعد',
+    priceLabel: 'السعر (بالريال)',
     suggestTags: 'اقترح وسوم',
     suggestedTags: 'الوسوم المقترحة',
     submit: 'إرسال',

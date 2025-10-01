@@ -1,3 +1,4 @@
+
 export type Activity = {
   id: string; // Firestore document ID
   title: { en: string; ar: string };
@@ -13,6 +14,16 @@ export type Activity = {
     imageUrl: string;
     imageHint: string;
   } | null;
+  image_path?: string | null;
+  created_at?: any;
+};
+
+export type Trip = {
+  id: string; // Firestore document ID
+  title: { en: string; ar: string };
+  destination: { en: string; ar: string };
+  schedule: { en: string; ar: string };
+  price: number;
   image_path?: string | null;
   created_at?: any;
 };
