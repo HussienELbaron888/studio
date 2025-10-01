@@ -8,12 +8,15 @@ import { db, storage } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/types';
 import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
+import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 type ActivityCardProps = {
   activity: Activity;
@@ -84,6 +87,11 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     return () => unsubscribe();
   }, [user, activity.id]);
 
+  const schedule = activity.schedule?.[language as keyof typeof activity.schedule];
+  const time = activity.time;
+  const sessions = activity.sessions;
+  const price = activity.price;
+
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
@@ -117,13 +125,41 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
           </Badge>
         </div>
         <div className="p-4 flex flex-col flex-grow">
-          <h3 className="font-headline text-lg font-semibold flex-grow">
+          <h3 className="font-headline text-lg font-semibold flex-grow min-h-[3rem]">
             {activity.title[language as keyof typeof activity.title]}
           </h3>
+
+          <div className="my-3 space-y-2 text-sm text-muted-foreground">
+            {schedule && (
+              <div className="flex items-center">
+                <CalendarDays className={cn("h-4 w-4", language === 'ar' ? "ml-2" : "mr-2")} />
+                <span>{schedule}</span>
+              </div>
+            )}
+            {time && (
+              <div className="flex items-center">
+                <Clock className={cn("h-4 w-4", language === 'ar' ? "ml-2" : "mr-2")} />
+                <span>{time}</span>
+              </div>
+            )}
+             {sessions && sessions > 0 && (
+              <div className="flex items-center">
+                <Repeat className={cn("h-4 w-4", language === 'ar' ? "ml-2" : "mr-2")} />
+                <span>{language === 'ar' ? `${sessions} حصص` : `${sessions} Sessions`}</span>
+              </div>
+            )}
+             {activity.type === 'Paid' && price && price > 0 && (
+              <div className="flex items-center font-semibold text-accent-foreground">
+                <DollarSign className={cn("h-4 w-4", language === 'ar' ? "ml-2" : "mr-2")} />
+                <span>{language === 'ar' ? `${price} ريال` : `${price} SAR`}</span>
+              </div>
+            )}
+          </div>
+
           {user && (
             <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full mt-4" disabled={isSubscribed}>
+                <Button className="w-full mt-auto" disabled={isSubscribed}>
                   {isSubscribed ? content.subscribedButton : content.subscribeButton}
                 </Button>
               </DialogTrigger>
