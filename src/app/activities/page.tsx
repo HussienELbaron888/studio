@@ -40,6 +40,11 @@ export default function ActivitiesPage() {
       setActivities(activitiesData);
       setLoading(false);
     }, (error) => {
+      if (error.code === 'permission-denied') {
+        console.warn('Permission denied for activities collection. This might be expected for some users.');
+        setLoading(false);
+        return;
+      }
       console.error("Error fetching activities:", error);
       setLoading(false);
     });

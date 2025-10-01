@@ -35,6 +35,11 @@ export function ManageTrips() {
             setTrips(tripsData);
             setLoading(false);
         }, (error) => {
+            if (error.code === 'permission-denied') {
+                console.warn('Permission denied fetching trips for dashboard.');
+                setLoading(false);
+                return;
+            }
             console.error("Error fetching trips:", error);
             setLoading(false);
             toast({ title: "Error", description: "Could not fetch trips.", variant: "destructive" });

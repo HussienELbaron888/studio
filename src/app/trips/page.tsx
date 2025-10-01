@@ -40,6 +40,11 @@ export default function TripsPage() {
       setTrips(tripsData);
       setLoading(false);
     }, (error) => {
+      if (error.code === 'permission-denied') {
+        console.warn('Permission denied for trips collection. This might be expected for some users.');
+        setLoading(false);
+        return;
+      }
       console.error("Error fetching trips:", error);
       setLoading(false);
     });

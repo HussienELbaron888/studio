@@ -51,6 +51,10 @@ export function ActivitiesCarousel() {
       setActivities(activitiesData);
       setLoading(false);
     }, (error) => {
+      if (error.code === 'permission-denied') {
+        setLoading(false);
+        return; // Silently ignore for public carousel
+      }
       console.error("Error fetching activities:", error);
       setLoading(false);
     });

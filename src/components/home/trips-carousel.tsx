@@ -51,6 +51,10 @@ export function TripsCarousel() {
       setTrips(tripsData);
       setLoading(false);
     }, (error) => {
+      if (error.code === 'permission-denied') {
+        setLoading(false);
+        return; // Silently ignore for public carousel
+      }
       console.error("Error fetching trips:", error);
       setLoading(false);
     });
