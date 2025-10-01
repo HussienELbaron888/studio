@@ -62,6 +62,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -69,6 +70,7 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
+      let imageUrl: string | null = null;
       let imagePath: string | null = null;
       
       // 2. Upload image if it exists
@@ -91,10 +93,10 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         sessions: Number(sessions),
         price: Number(price),
         type: type,
-        image: imageFile ? {
+        image: imagePath ? {
             id: `custom-${activityId}`,
             description: descriptionEn,
-            imageUrl: "", // Left empty, card will resolve it
+            imageUrl: "",
             imageHint: "custom activity"
         } : null,
         image_path: imagePath,
