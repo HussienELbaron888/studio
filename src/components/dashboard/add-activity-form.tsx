@@ -2,111 +2,103 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { ref, uploadBytes } from "firebase/storage";
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useLanguage } from "@/context/language-context";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const formSchema = z.object({
-  title_ar: z.string().min(3, "العنوان بالعربية مطلوب."),
-  title_en: z.string().min(3, "Title in English is required."),
-  description_ar: z.string().min(10, "الوصف بالعربية مطلوب."),
-  description_en: z.string().min(10, "Description in English is required."),
-  schedule_ar: z.string().min(2, "المواعيد بالعربية مطلوبة."),
-  schedule_en: z.string().min(2, "Schedule in English is required."),
-  time: z.string().min(1, "الوقت مطلوب."),
-  sessions: z.coerce.number().min(1, "عدد الحصص مطلوب."),
-  price: z.coerce.number().min(0, "السعر مطلوب."),
-  type: z.enum(["Free", "Paid"], { required_error: "يجب تحديد النوع." }),
-  image: z.any().optional(),
-});
+import { useLanguage } from "@/context/language-context";
 
 type AddActivityFormProps = {
   setDialogOpen: (open: boolean) => void;
-}
+};
 
 export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
   const { content } = useLanguage();
   const { toast } = useToast();
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title_ar: "",
-      title_en: "",
-      description_ar: "",
-      description_en: "",
-      schedule_ar: "",
-      schedule_en: "",
-      time: "",
-      sessions: 1,
-      price: 0,
-      type: "Free",
-    },
-  });
 
-  const { formState: { isSubmitting } } = form;
+  // State management with useState
+  const [titleAr, setTitleAr] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+  const [descriptionAr, setDescriptionAr] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
+  const [scheduleAr, setScheduleAr] = useState("");
+  const [scheduleEn, setScheduleEn] = useState("");
+  const [time, setTime] = useState("");
+  const [sessions, setSessions] = useState<number | string>(1);
+  const [price, setPrice] = useState<number | string>(0);
+  const [type, setType] = useState<"Free" | "Paid">("Free");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      form.setValue("image", file); // Inform react-hook-form about the file
-    } else {
-      setImageFile(null);
-      form.setValue("image", null);
     }
   };
+  
+  const resetForm = () => {
+    setTitleAr("");
+    setTitleEn("");
+    setDescriptionAr("");
+    setDescriptionEn("");
+    setScheduleAr("");
+    setScheduleEn("");
+    setTime("");
+    setSessions(1);
+    setPrice(0);
+    setType("Free");
+    setImageFile(null);
+  }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      // 1. Prepare DocRef to get a unique ID before any upload
+      // 1. Prepare DocRef to get a unique ID
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
       let imagePath: string | null = null;
-      let imageUrl: string | null = null; // Will remain null or empty
+      let imageUrl: string | null = null; // Will be empty as we resolve on client
 
-      // 2. Upload image if it exists, but DO NOT get the download URL here
+      // 2. Upload image if it exists
       if (imageFile) {
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
         imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
         const storageReference = ref(storage, imagePath);
-        
+
         await uploadBytes(storageReference, imageFile, {
-            contentType: imageFile.type || "application/octet-stream" 
+          contentType: imageFile.type || "application/octet-stream",
         });
-        // We specifically DO NOT call getDownloadURL here to make the upload process faster and more reliable.
-        // The URL will be resolved on the client-side when the activity card is displayed.
+        imageUrl = ""; // Leave empty, card will resolve it from image_path
       }
 
-      // 3. Save the document to Firestore with the generated ID
+      // 3. Save the document to Firestore
       await setDoc(activityRef, {
-        title: { en: values.title_en, ar: values.title_ar },
-        description: { en: values.description_en, ar: values.description_ar },
-        schedule: { en: values.schedule_en, ar: values.schedule_ar },
-        time: values.time,
-        sessions: values.sessions,
-        price: values.price,
-        type: values.type,
+        title: { en: titleEn, ar: titleAr },
+        description: { en: descriptionEn, ar: descriptionAr },
+        schedule: { en: scheduleEn, ar: scheduleAr },
+        time: time,
+        sessions: Number(sessions),
+        price: Number(price),
+        type: type,
         image: imageFile ? {
             id: `custom-${activityId}`,
-            description: values.description_en,
-            imageUrl: "", // Left empty intentionally.
+            description: descriptionEn,
+            imageUrl: imageUrl || "",
             imageHint: "custom activity"
         } : null,
-        image_path: imagePath, // Save the storage path
+        image_path: imagePath,
         created_at: serverTimestamp(),
       });
 
@@ -114,8 +106,8 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         title: "تم بنجاح!",
         description: "تمت إضافة النشاط بنجاح.",
       });
-      form.reset();
-      setImageFile(null);
+      
+      resetForm();
       setDialogOpen(false);
 
     } catch (error: any) {
@@ -125,89 +117,91 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
         description: `فشلت العملية. الخطأ: ${error.code || error.message}`,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="title_ar" render={({ field }) => (
-                <FormItem><FormLabel>عنوان النشاط (بالعربية)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-            <FormField control={form.control} name="title_en" render={({ field }) => (
-                <FormItem><FormLabel>Activity Title (English)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="title_ar">عنوان النشاط (بالعربية)</Label>
+          <Input id="title_ar" value={titleAr} onChange={e => setTitleAr(e.target.value)} required />
         </div>
-        <FormField control={form.control} name="description_ar" render={({ field }) => (
-            <FormItem><FormLabel>الوصف (بالعربية)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="description_en" render={({ field }) => (
-            <FormItem><FormLabel>Description (English)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        <div className="space-y-2">
+          <Label htmlFor="title_en">Activity Title (English)</Label>
+          <Input id="title_en" value={titleEn} onChange={e => setTitleEn(e.target.value)} required />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description_ar">الوصف (بالعربية)</Label>
+        <Textarea id="description_ar" value={descriptionAr} onChange={e => setDescriptionAr(e.target.value)} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description_en">Description (English)</Label>
+        <Textarea id="description_en" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} required />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="schedule_ar" render={({ field }) => (
-                <FormItem><FormLabel>{content.scheduleLabel} (بالعربية)</FormLabel><FormControl><Input placeholder="الأحد، الثلاثاء، الخميس" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="schedule_en" render={({ field }) => (
-                <FormItem><FormLabel>{content.scheduleLabel} (English)</FormLabel><FormControl><Input placeholder="Sun, Tue, Thu" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="schedule_ar">{content.scheduleLabel} (بالعربية)</Label>
+          <Input id="schedule_ar" value={scheduleAr} onChange={e => setScheduleAr(e.target.value)} placeholder="الأحد، الثلاثاء" required />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="time" render={({ field }) => (
-                <FormItem><FormLabel>{content.timeLabel}</FormLabel><FormControl><Input placeholder="4:00 PM - 5:00 PM" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-            <FormField control={form.control} name="sessions" render={({ field }) => (
-                <FormItem><FormLabel>{content.sessionsLabel}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+        <div className="space-y-2">
+          <Label htmlFor="schedule_en">{content.scheduleLabel} (English)</Label>
+          <Input id="schedule_en" value={scheduleEn} onChange={e => setScheduleEn(e.target.value)} placeholder="Sun, Tue" required />
         </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="price" render={({ field }) => (
-                <FormItem><FormLabel>{content.priceLabel}</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="type" render={({ field }) => (
-                <FormItem className="space-y-3"><FormLabel>{content.typeLabel}</FormLabel>
-                <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="Free" /></FormControl>
-                            <FormLabel className="font-normal">{content.free}</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="Paid" /></FormControl>
-                            <FormLabel className="font-normal">{content.paid}</FormLabel>
-                        </FormItem>
-                    </RadioGroup>
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="time">{content.timeLabel}</Label>
+          <Input id="time" value={time} onChange={e => setTime(e.target.value)} placeholder="4:00 PM - 5:00 PM" required />
         </div>
-        <FormField
-            control={form.control}
-            name="image"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>{content.imageLabel}</FormLabel>
-                <FormControl>
-                    <Input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        disabled={isSubmitting}
-                    />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
+        <div className="space-y-2">
+          <Label htmlFor="sessions">{content.sessionsLabel}</Label>
+          <Input id="sessions" type="number" value={sessions} onChange={e => setSessions(e.target.value)} required />
+        </div>
+      </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="price">{content.priceLabel}</Label>
+          <Input id="price" type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required />
+        </div>
+        <div className="space-y-3">
+          <Label>{content.typeLabel}</Label>
+          <RadioGroup value={type} onValueChange={(value: "Free" | "Paid") => setType(value)} className="flex space-x-4">
+              <div className="flex items-center space-x-2 space-y-0">
+                  <RadioGroupItem value="Free" id="type-free" />
+                  <Label htmlFor="type-free" className="font-normal">{content.free}</Label>
+              </div>
+              <div className="flex items-center space-x-2 space-y-0">
+                  <RadioGroupItem value="Paid" id="type-paid" />
+                  <Label htmlFor="type-paid" className="font-normal">{content.paid}</Label>
+              </div>
+          </RadioGroup>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="image">{content.imageLabel}</Label>
+        <Input 
+            id="image"
+            type="file" 
+            accept="image/*"
+            onChange={handleImageChange}
+            disabled={isSubmitting}
         />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? 'جارٍ الحفظ...' : content.addActivity}
-        </Button>
-      </form>
-    </Form>
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting ? 'جارٍ الحفظ...' : content.addActivity}
+      </Button>
+    </form>
   );
 }
 
