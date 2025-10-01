@@ -72,8 +72,8 @@ export function AppHeader() {
         <div className="flex-1 md:flex-grow-0" />
         
         <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
-            <Image src="/AGS LOGO.png" alt="AGS Logo" width={110} height={110} priority style={{ height: 'auto' }} />
-            <Image src="/ACTIVITY.png" alt="Activity Logo" width={110} height={110} style={{ height: 'auto' }} />
+            <Image src="/AGS LOGO.png" alt="AGS Logo" width={110} height={110} priority style={{ height: 'auto', width: 'auto' }} />
+            <Image src="/ACTIVITY.png" alt="Activity Logo" width={110} height={110} style={{ height: 'auto', width: 'auto' }} />
         </div>
 
         <div className="flex items-center gap-2">

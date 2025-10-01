@@ -10,6 +10,7 @@ import { Loader2, Upload, X } from "lucide-react";
 import { saveTrip, TripValues } from "@/utils/saveTrip";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/language-context";
 
 type AddTripFormProps = {
   setDialogOpen: (open: boolean) => void;
@@ -17,6 +18,7 @@ type AddTripFormProps = {
 
 export function AddTripForm({ setDialogOpen }: AddTripFormProps) {
   const { toast } = useToast();
+  const { content } = useLanguage();
 
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
