@@ -16,7 +16,7 @@ service cloud.firestore {
     }
     function isAdmin() { return isAdminByEmail() || isAdminByRole(); }
 
-    // Home content (public read, admin write)
+    /* Public content for website display */
     match /activities/{doc}            { allow read: if true; allow write: if isAdmin(); }
     match /{path=**}/activities/{doc}  { allow read: if true; allow write: if isAdmin(); }
 
@@ -34,11 +34,11 @@ service cloud.firestore {
 
     match /settings/{doc}              { allow read: if true; allow write: if isAdmin(); }
     match /{path=**}/settings/{doc}    { allow read: if true; allow write: if isAdmin(); }
-
-    // Protect sensitive data
-    match /users/{uid}/subscriptions/{subId} {
-      allow create: if isSignedIn();
-      allow read, delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    
+    match /users/{userId}/subscriptions/{subscriptionId} {
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
     }
     
     match /users/{uid} {
