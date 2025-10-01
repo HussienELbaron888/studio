@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/context/language-context';
@@ -33,23 +33,20 @@ export default function MySubscriptionsPage() {
     const q = query(subscriptionsRef);
     
     const unsubscribe = onSnapshot(q, async (subscriptionsSnapshot) => {
-      const subscribedIds = subscriptionsSnapshot.docs.map(doc => doc.data().activityId);
-      
-      if (subscribedIds.length === 0) {
-        setSubscribedActivities([]);
-        setLoading(false);
-        return;
-      }
+      const activityPromises = subscriptionsSnapshot.docs.map(async (subDoc) => {
+        const activityId = subDoc.data().activityId;
+        if (!activityId) return null;
+        
+        const activityRef = doc(db, 'activities', activityId);
+        const activitySnap = await getDoc(activityRef);
 
-      // Fetch all activities and filter them client-side
-      const activitiesCollectionRef = collection(db, 'activities');
-      const activitiesSnapshot = await getDocs(activitiesCollectionRef);
-      const allActivities = activitiesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Activity));
+        if (activitySnap.exists()) {
+          return { id: activitySnap.id, ...activitySnap.data() } as Activity;
+        }
+        return null;
+      });
 
-      const userActivities = allActivities.filter(activity => subscribedIds.includes(activity.id));
+      const userActivities = (await Promise.all(activityPromises)).filter(Boolean) as Activity[];
       
       setSubscribedActivities(userActivities);
       setLoading(false);
