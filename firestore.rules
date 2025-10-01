@@ -1,36 +1,45 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is an admin
-    function isAdmin() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    
+    // Helper function to get user role
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
-    // Users can read/write their own data. Admins can read anyone's data.
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && getRole() == 'admin';
+    }
+
+    // Rules for the 'users' collection
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      allow get: if isAdmin();
+      // An admin can read/write any user document. A user can read/write their own document.
+      allow read, write: if isAdmin() || request.auth.uid == userId;
+
+      // Rules for user subscriptions subcollection
+      match /subscriptions/{subscriptionId} {
+        // A user can manage their own subscriptions. Admins can view any subscription.
+        allow read, list, create: if request.auth.uid == userId;
+        allow list, read: if isAdmin();
+      }
     }
     
-    // Anyone can read activities, but only admins can write them.
+    // Rules for the 'activities' collection
     match /activities/{activityId} {
-      allow get, list: if true;
+      // Anyone can read activities.
+      allow read: if true;
+      // Only admins can create, update, or delete activities.
       allow write: if isAdmin();
     }
 
-    // Anyone can read trips, but only admins can write them.
+    // Rules for the 'trips' collection
     match /trips/{tripId} {
-      allow get, list: if true;
+      // Anyone can read trips.
+      allow read: if true;
+      // Only admins can create, update, or delete trips.
       allow write: if isAdmin();
-    }
-
-    // Users can manage their own subscriptions.
-    match /users/{userId}/subscriptions/{subscriptionId} {
-      allow read, write, create, delete: if request.auth.uid == userId;
     }
   }
 }
