@@ -1,48 +1,47 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
     function isSignedIn() { 
       return request.auth != null; 
     }
-    function isUser(uid) { 
-      return isSignedIn() && request.auth.uid == uid; 
+
+    function isAdminByEmail() {
+      return isSignedIn() && request.auth.token.email in [
+        "hussienelbaron888@gmail.com",
+        "admin@ags-activity.com"
+      ];
     }
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    function isAdminByRole() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // Public content is readable by anyone, but only writable by admins.
-    match /activities/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function isAdmin() { 
+      return isAdminByEmail() || isAdminByRole(); 
     }
-    match /trips/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /gallery/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    // Add other public collections here following the same pattern.
+
+    // Public content is readable by anyone, writable only by admins
+    match /activities/{docId}   { allow read: if true; allow write: if isAdmin(); }
+    match /trips/{docId}        { allow read: if true; allow write: if isAdmin(); }
     
-    // User-specific data
+    // Users can read their own user document, admins can read/write any.
     match /users/{uid} {
-      // Admins can read any user profile. Users can only read their own.
-      allow read: if isAdmin() || isUser(uid);
-      // Users can write to their own document, admins can write to any.
-      allow write: if isAdmin() || isUser(uid);
-
-      // Subscriptions are private to each user.
-      match /subscriptions/{subId} {
-        // Users can read and create subscriptions for themselves.
-        allow read, create: if isUser(uid);
-        // Only admins or the user who owns the subscription can update/delete it.
-        allow update, delete: if isAdmin() || isUser(uid);
-      }
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read, write: if isAdmin();
+    }
+    
+    // Rules for user-specific subcollections
+    match /users/{uid}/subscriptions/{subId} {
+        // Allow read/delete by the user who owns the subscription or an admin
+        allow read, delete: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+        
+        // Allow create if the user is signed in and the userId in the document matches their own UID
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        
+        // Allow update by the user if they don't change the core IDs, or by an admin
+        allow update: if (isSignedIn() && request.auth.uid == uid && request.resource.data.userId == resource.data.userId && request.resource.data.activityId == resource.data.activityId && request.resource.data.tripId == resource.data.tripId) || isAdmin();
     }
   }
 }

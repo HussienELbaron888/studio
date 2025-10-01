@@ -44,7 +44,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
   const { formState: { isSubmitting } } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !user.email) {
+    if (!user || !user.uid || !user.email) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to subscribe.",
@@ -56,6 +56,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
     try {
       const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
       await addDoc(subscriptionsRef, {
+        userId: user.uid, // Add this for security rules
         activityId,
         itemTitle: activityTitle,
         itemType: 'activity',

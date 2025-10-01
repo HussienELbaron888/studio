@@ -66,7 +66,7 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   }, [activity.image_path, activity.image?.imageUrl]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.uid) {
       setIsSubscribed(false);
       return;
     };
@@ -80,11 +80,9 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setIsSubscribed(!querySnapshot.empty);
     }, (error) => {
-      if (error.code === 'permission-denied') {
-          console.warn("Permission check failed for activity subscription. This may be expected.");
-          return;
+      if (error.code !== 'permission-denied') {
+        console.error("Subscription check failed:", error);
       }
-      console.error("Subscription check failed:", error);
     });
 
     return () => unsubscribe();
