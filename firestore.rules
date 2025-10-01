@@ -1,13 +1,46 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+    
+    // Function to check if the user is an admin
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Function to check if the user is the owner of the data
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
 
-      match /subscriptions/{subscriptionId} {
-        allow read, write: if request.auth.uid == userId;
-      }
+    // Activities can be read by anyone, but only managed by admins
+    match /activities/{activityId} {
+      allow read: if true;
+      allow write: if isAdmin(); // Covers create, update, delete
+    }
+
+    // Trips can be read by anyone, but only managed by admins
+    match /trips/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin(); // Covers create, update, delete
+    }
+
+    // User data rules
+    match /users/{userId} {
+      // Allow user creation (registration) for anyone
+      allow create: if true;
+      // Allow users to read their own data, and admins to read any user's data
+      allow read: if isOwner(userId) || isAdmin();
+      // Allow users to update their own data
+      allow update: if isOwner(userId);
+      // Deny deletion of user profiles for now
+      allow delete: if false;
+    }
+    
+    // Subscription rules: Only the user can manage their own subscriptions
+    match /users/{userId}/subscriptions/{subscriptionId} {
+        allow read, write: if isOwner(userId);
     }
   }
 }
