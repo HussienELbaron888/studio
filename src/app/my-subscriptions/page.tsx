@@ -32,7 +32,12 @@ export default function MySubscriptionsPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // If there is no user, do not attempt to fetch subscriptions.
+      // Set loading to false and return early.
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     const subscriptionsRef = collection(db, 'users', user.uid, 'subscriptions');
@@ -48,8 +53,8 @@ export default function MySubscriptionsPage() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching subscriptions:", error);
+      // Silently ignore permission errors, which might happen briefly during auth state changes.
       if (error.code === 'permission-denied') {
-        // Silently ignore permission errors on this page
         setLoading(false);
         return;
       }
