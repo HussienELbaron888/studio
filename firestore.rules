@@ -2,11 +2,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents for now
-    // This is to unblock the current permission errors
-    // We will re-implement stricter security rules later
-    match /{document=**} {
-      allow read, write: if true;
+  
+    function isUser(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read, write: if isUser(uid) || isAdmin();
+    }
+
+    match /activities/{activityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /trips/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/subscriptions/{subscriptionId} {
+      allow read, create: if isUser(uid);
+      allow delete: if isUser(uid) || isAdmin();
     }
   }
 }

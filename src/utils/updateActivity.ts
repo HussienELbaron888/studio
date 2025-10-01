@@ -1,6 +1,6 @@
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
-import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, deleteObject } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 
 export type ActivityValues = {
   title_ar?: string; title_en?: string;
@@ -15,7 +15,6 @@ export async function updateImageAndSaveActivity(
   file?: File | null,
   existingImagePath?: string | null
 ) {
-  const storage = getStorage();
   const activityRef = doc(db, "activities", activityId);
 
   let imagePath: string | null = existingImagePath || null;

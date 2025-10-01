@@ -1,6 +1,6 @@
-
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 
 export type TripValues = {
   title_ar?: string; title_en?: string;
@@ -10,9 +10,6 @@ export type TripValues = {
 };
 
 export async function saveTrip(values: TripValues, file?: File | null) {
-  const db = getFirestore();
-  const storage = getStorage();
-
   const tripRef = doc(collection(db, "trips"));
   const tripId = tripRef.id;
 

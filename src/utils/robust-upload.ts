@@ -1,5 +1,6 @@
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 
 export type ActivityValues = {
   title_ar?: string; title_en?: string;
@@ -9,9 +10,6 @@ export type ActivityValues = {
 };
 
 export async function uploadImageAndSaveActivity(values: ActivityValues, file?: File | null) {
-  const db = getFirestore();
-  const storage = getStorage();
-
   const activityRef = doc(collection(db, "activities"));
   const activityId = activityRef.id;
 

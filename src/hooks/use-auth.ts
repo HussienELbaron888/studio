@@ -1,9 +1,9 @@
 
 "use client"
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export interface AppUser extends User {
@@ -15,11 +15,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true); // Start loading when auth state changes
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        // Use onSnapshot to listen for real-time role changes
-        const unsubscribeSnapshot = onSnapshot(userDocRef, (userDoc) => {
+        try {
+          const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             setUser({
               ...firebaseUser,
@@ -29,19 +30,16 @@ export function useAuth() {
             // User exists in Auth but not in Firestore, treat as regular user
             setUser({ ...firebaseUser, role: 'user' });
           }
-          setLoading(false);
-        }, (error) => {
-          console.error("Error fetching user role with onSnapshot:", error);
-          // Fallback to user role on error, but still set loading to false
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          // Fallback to user role on error
           setUser({ ...firebaseUser, role: 'user' });
-          setLoading(false);
-        });
-        
-        // Return the snapshot listener's unsubscribe function
-        return () => unsubscribeSnapshot();
+        } finally {
+          setLoading(false); // Stop loading after fetching role
+        }
       } else {
         setUser(null);
-        setLoading(false);
+        setLoading(false); // Stop loading if no user
       }
     });
 
