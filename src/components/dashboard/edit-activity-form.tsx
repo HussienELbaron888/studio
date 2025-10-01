@@ -13,8 +13,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { Activity } from "@/lib/types";
 import { ActivityValues, updateImageAndSaveActivity } from "@/utils/updateActivity";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/lib/firebase";
+import { resolveStorageURL } from "@/utils/storage-url";
 
 
 type EditActivityFormProps = {
@@ -55,11 +54,11 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       setPrice(activity.price || "");
       setType(activity.type || "Free");
       
-      if (activity.image_path) {
-        getDownloadURL(ref(storage, activity.image_path))
-          .then(url => setPreviewUrl(url))
-          .catch(console.error);
-      }
+      resolveStorageURL(activity.image_path)
+        .then(url => {
+          if (url) setPreviewUrl(url);
+        })
+        .catch(console.error);
     }
   }, [activity]);
 

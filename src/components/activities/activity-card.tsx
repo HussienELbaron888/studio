@@ -1,10 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { getDownloadURL, ref as storageRef } from "firebase/storage";
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveStorageURL } from '@/utils/storage-url';
 
 
 type ActivityCardProps = {
@@ -28,44 +29,35 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(activity.image?.imageUrl || null);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
-    
-    async function resolveUrl() {
-      setIsImageLoading(true);
-      if (activity.image?.imageUrl) {
-        setResolvedUrl(activity.image.imageUrl);
-        setIsImageLoading(false);
-        return;
-      }
-      
-      if (activity.image_path) {
-        try {
-          const url = await getDownloadURL(storageRef(storage, activity.image_path));
-          if (mounted) {
-            setResolvedUrl(url);
-          }
-        } catch (e) {
-          console.error("Error resolving image URL:", e);
-          if (mounted) {
-            setResolvedUrl(null); // Set to null on error to hide image
-          }
-        } finally {
-           if (mounted) {
-            setIsImageLoading(false);
-          }
-        }
-      } else {
-        setIsImageLoading(false);
-      }
-    }
+   useEffect(() => {
+    let cancel = false;
+    setIsImageLoading(true);
 
-    resolveUrl();
+    const fetchUrl = async () => {
+        try {
+            // First, try resolving from image_path
+            const urlFromPath = await resolveStorageURL(activity.image_path);
+            if (!cancel) {
+                // If image_path gives a URL, use it. Otherwise, fall back to the static imageUrl.
+                setResolvedUrl(urlFromPath || activity.image?.imageUrl || null);
+                setIsImageLoading(false);
+            }
+        } catch (e) {
+            console.error("Image resolve failed:", e);
+            if (!cancel) {
+                // On error, fall back to static URL or null
+                setResolvedUrl(activity.image?.imageUrl || null);
+                setIsImageLoading(false);
+            }
+        }
+    };
     
-    return () => { mounted = false; };
+    fetchUrl();
+
+    return () => { cancel = true; };
   }, [activity.image_path, activity.image?.imageUrl]);
 
   useEffect(() => {

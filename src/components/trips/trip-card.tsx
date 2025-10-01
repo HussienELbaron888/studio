@@ -1,15 +1,15 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getDownloadURL, ref as storageRef } from "firebase/storage";
-import { storage } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import type { Trip } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveStorageURL } from '@/utils/storage-url';
 
 type TripCardProps = {
   trip: Trip;
@@ -22,34 +22,27 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    let cancel = false;
+    setIsImageLoading(true);
     
-    async function resolveUrl() {
-      setIsImageLoading(true);
-      if (trip.image_path) {
-        try {
-          const url = await getDownloadURL(storageRef(storage, trip.image_path));
-          if (mounted) {
-            setResolvedUrl(url);
-          }
-        } catch (e) {
-          console.error("Error resolving image URL:", e);
-          if (mounted) {
-            setResolvedUrl(null);
-          }
-        } finally {
-           if (mounted) {
-            setIsImageLoading(false);
-          }
+    const fetchUrl = async () => {
+      try {
+        const u = await resolveStorageURL(trip.image_path);
+        if (!cancel) {
+          setResolvedUrl(u);
         }
-      } else {
-        setIsImageLoading(false);
+      } catch (e) {
+        console.error("img resolve failed:", e);
+      } finally {
+        if (!cancel) {
+          setIsImageLoading(false);
+        }
       }
-    }
-
-    resolveUrl();
+    };
     
-    return () => { mounted = false; };
+    fetchUrl();
+
+    return () => { cancel = true; };
   }, [trip.image_path]);
 
   const title = trip.title[language as keyof typeof trip.title];
