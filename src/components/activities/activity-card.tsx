@@ -91,6 +91,7 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const time = activity.time;
   const sessions = activity.sessions;
   const price = activity.price;
+  const description = activity.description?.[language as keyof typeof activity.description];
 
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -128,6 +129,12 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
           <h3 className="font-headline text-lg font-semibold flex-grow min-h-[3rem]">
             {activity.title[language as keyof typeof activity.title]}
           </h3>
+
+          {description && (
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                {description}
+            </p>
+          )}
 
           <div className="my-3 space-y-2 text-sm text-muted-foreground">
             {schedule && (
