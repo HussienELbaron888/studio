@@ -9,7 +9,7 @@ import type { Trip } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL } from '@/utils/storage-url';
+import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
 
 type TripCardProps = {
   trip: Trip;
@@ -27,9 +27,15 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     
     const fetchUrl = async () => {
       try {
-        const u = await resolveStorageURL(trip.image_path);
+        let url: string | null = null;
+        if (trip.image_path) {
+            url = await resolveStorageURL(trip.image_path);
+        } else if ((trip as any).image?.imageUrl) {
+            url = fixOldBucketUrl((trip as any).image.imageUrl);
+        }
+        
         if (!cancel) {
-          setResolvedUrl(u);
+          setResolvedUrl(url);
         }
       } catch (e) {
         console.error("img resolve failed:", e);
@@ -43,7 +49,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     fetchUrl();
 
     return () => { cancel = true; };
-  }, [trip.image_path]);
+  }, [trip.image_path, (trip as any).image?.imageUrl]);
 
   const title = trip.title[language as keyof typeof trip.title];
   const destination = trip.destination[language as keyof typeof trip.destination];

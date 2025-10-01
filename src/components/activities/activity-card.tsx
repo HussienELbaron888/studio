@@ -16,7 +16,7 @@ import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL } from '@/utils/storage-url';
+import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
 
 
 type ActivityCardProps = {
@@ -38,18 +38,23 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
 
     const fetchUrl = async () => {
         try {
-            // First, try resolving from image_path
-            const urlFromPath = await resolveStorageURL(activity.image_path);
+            let url: string | null = null;
+            if (activity.image_path) {
+                url = await resolveStorageURL(activity.image_path);
+            } else if (activity.image?.imageUrl) {
+                url = fixOldBucketUrl(activity.image.imageUrl);
+            }
+            
             if (!cancel) {
-                // If image_path gives a URL, use it. Otherwise, fall back to the static imageUrl.
-                setResolvedUrl(urlFromPath || activity.image?.imageUrl || null);
-                setIsImageLoading(false);
+                setResolvedUrl(url);
             }
         } catch (e) {
             console.error("Image resolve failed:", e);
             if (!cancel) {
-                // On error, fall back to static URL or null
-                setResolvedUrl(activity.image?.imageUrl || null);
+                setResolvedUrl(null);
+            }
+        } finally {
+            if (!cancel) {
                 setIsImageLoading(false);
             }
         }
