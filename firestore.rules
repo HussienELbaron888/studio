@@ -4,10 +4,11 @@ service cloud.firestore {
 
     function isSignedIn() { return request.auth != null; }
     function isAdminByEmail() {
-      return isSignedIn() && request.auth.token.email in [
-        "hussienelbaron888@gmail.com",
-        "admin@ags-activity.com"
-      ];
+      return isSignedIn() && request.auth.token.email != null
+        && (request.auth.token.email in [
+          "hussienelbaron888@gmail.com",
+          "admin@ags-activity.com"
+        ]);
     }
     function isAdminByRole() {
       return isSignedIn()
@@ -16,31 +17,35 @@ service cloud.firestore {
     }
     function isAdmin() { return isAdminByEmail() || isAdminByRole(); }
 
-    // activities: top-level + collection-group
-    match /activities/{doc}      { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/activities/{doc} { allow read: if true; allow write: if isAdmin(); }
+    /* ✅ فتح قراءة عامة مؤقتًا لكل المستندات لعزل المشكلة */
+    match /{document=**} {
+      allow read: if true;
+    }
 
-    // trips: top-level + collection-group
-    match /trips/{doc}           { allow read: if true; allow write: if isAdmin(); }
-    match /{path=**}/trips/{doc} { allow read: if true; allow write: if isAdmin(); }
+    /* ✍️ الكتابة لمجموعات المحتوى للأدمن فقط */
+    match /activities/{doc}            { allow write: if isAdmin(); }
+    match /trips/{doc}                 { allow write: if isAdmin(); }
+    match /banners/{doc}               { allow write: if isAdmin(); }
+    match /gallery/{doc}               { allow write: if isAdmin(); }
+    match /suppliers/{doc}             { allow write: if isAdmin(); }
 
-    // Other public collections for the homepage
-    match /gallery/{doc}   { allow read: if true; allow write: if isAdmin(); }
-    match /suppliers/{doc} { allow read: if true; allow write: if isAdmin(); }
-    match /banners/{doc}   { allow read: if true; allow write: if isAdmin(); }
-    match /events/{doc}    { allow read: if true; allow write: if isAdmin(); }
+    /* حجوزات الرحلات تظل محمية */
+    match /trips/{tripId}/registrations/{regId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read:   if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow update, delete: if isAdmin();
+    }
+    
+    // الاشتراكات
+    match /users/{userId}/subscriptions/{subscriptionId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
 
 
-    // User profiles and role management
+    /* users لإدارة أدوار الأدمن */
     match /users/{uid} {
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
-    }
-    
-    // Subscriptions subcollection
-    match /users/{uid}/subscriptions/{subId} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
-      allow list: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }
