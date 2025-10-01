@@ -1,211 +1,133 @@
 "use client";
-import React, { useState } from "react";
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
-import { app } from "@/lib/firebase";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useLanguage } from "@/context/language-context";
+import { contentTagging } from "@/ai/flows/content-tagging";
+import { Wand2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-export default function AddActivityForm() {
-  // Move Firebase service initialization inside the component to ensure it runs on the client.
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+const formSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters."),
+  description: z.string().min(10, "Description must be at least 10 characters."),
+});
 
-  const [titleAr, setTitleAr] = useState("");
-  const [titleEn, setTitleEn] = useState("");
-  const [descriptionAr, setDescriptionAr] = useState("");
-  const [descriptionEn, setDescriptionEn] = useState("");
-  const [scheduleAr, setScheduleAr] = useState("");
-  const [scheduleEn, setScheduleEn] = useState("");
-  const [time, setTime] = useState("");
-  const [sessions, setSessions] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [activityType, setActivityType] = useState("paid");
-  const [type, setType] = useState("general");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+type AddActivityFormProps = {
+  setDialogOpen: (open: boolean) => void;
+}
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState<"success" | "error">("success");
+export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
+  const { content } = useLanguage();
+  const { toast } = useToast();
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+    },
+  });
 
-  const resetForm = () => {
-    setTitleAr("");
-    setTitleEn("");
-    setDescriptionAr("");
-    setDescriptionEn("");
-    setScheduleAr("");
-    setScheduleEn("");
-    setTime("");
-    setSessions(0);
-    setPrice(0);
-    setActivityType("paid");
-    setType("general");
-    setImageFile(null);
-    const fileInput = document.getElementById('file-input') as HTMLInputElement;
-    if (fileInput) {
-        fileInput.value = "";
+  const handleSuggestTags = async () => {
+    const description = form.getValues("description");
+    if (!description || description.length < 10) {
+      form.setError("description", { message: "Please enter a longer description to suggest tags." });
+      return;
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage("جارٍ حفظ النشاط...");
-    setMessageType("success");
-
+    
+    setIsSuggesting(true);
+    setSuggestedTags([]);
+    
     try {
-      // 1. Prepare data and generate ID
-      const activityRef = doc(collection(db, "activities"));
-      const activityId = activityRef.id;
-
-      let imagePath: string | null = null;
-      let imageUrlForDoc: string = "";
-
-      // 2. Upload image if it exists
-      if (imageFile) {
-        setMessage("جارٍ رفع الصورة...");
-        const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
-        imagePath = `activities/${activityId}/cover_${Date.now()}.${ext}`;
-        const fileStorageRef = storageRef(storage, imagePath);
-
-        await uploadBytes(fileStorageRef, imageFile, {
-          contentType: imageFile.type || "application/octet-stream",
-        });
-      }
-
-      // 3. Save the document
-      setMessage("جارٍ حفظ البيانات...");
-      const values = {
-        title_ar: titleAr,
-        title_en: titleEn,
-        description_ar: descriptionAr,
-        description_en: descriptionEn,
-        schedule_ar: scheduleAr,
-        schedule_en: scheduleEn,
-        time: time,
-        sessions: sessions,
-        price: activityType === 'free' ? 0 : price,
-        type: type
-      };
-
-      await setDoc(activityRef, {
-        ...values,
-        title: { en: values.title_en, ar: values.title_ar },
-        description: { en: values.description_en, ar: values.description_ar },
-        schedule: { en: values.schedule_en, ar: values.schedule_ar },
-        image: {
-          id: `img-${Date.now()}`,
-          description: values.description_en,
-          imageUrl: imageUrlForDoc,
-          imageHint: "activity cover",
-        },
-        image_path: imagePath,
-        created_at: serverTimestamp(),
+      const result = await contentTagging({ description });
+      setSuggestedTags(result.tags);
+    } catch (error) {
+      console.error("Error suggesting tags:", error);
+      toast({
+        title: "Error",
+        description: "Failed to suggest tags. Please try again.",
+        variant: "destructive",
       });
-
-      setMessageType("success");
-      setMessage("تم إضافة النشاط بنجاح ✅");
-      resetForm();
-
-    } catch (err: any) {
-      console.error("Operation failed:", err);
-      setMessageType("error");
-      setMessage(`فشل: ${err?.code || err?.message || "حدث خطأ غير متوقع"}`);
     } finally {
-      setIsSubmitting(false);
+      setIsSuggesting(false);
     }
   };
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log({ ...values, tags: suggestedTags });
+    toast({
+        title: "Success!",
+        description: "Activity has been added (simulated).",
+    });
+    setDialogOpen(false);
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {message && (
-        <Alert variant={messageType === 'error' ? 'destructive' : 'default'}>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>{messageType === 'error' ? 'حدث خطأ' : 'الحالة'}</AlertTitle>
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{content.activityTitleLabel}</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Beach Cleanup" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{content.activityDescriptionLabel}</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Describe the activity..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div>
+            <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
+                {isSuggesting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Wand2 className="mr-2 h-4 w-4" />
+                )}
+                {content.suggestTags}
+            </Button>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title_ar">عنوان (عربي)</Label>
-          <Input id="title_ar" value={titleAr} onChange={(e) => setTitleAr(e.target.value)} placeholder="مثال: ورشة صناعة الفخار" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="title_en">Title (English)</Label>
-          <Input id="title_en" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} placeholder="e.g., Pottery Making Workshop" required />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="description_ar">وصف (عربي)</Label>
-          <Textarea id="description_ar" value={descriptionAr} onChange={(e) => setDescriptionAr(e.target.value)} placeholder="وصف قصير للنشاط..." />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description_en">Description (English)</Label>
-          <Textarea id="description_en" value={descriptionEn} onChange={(e) => setDescriptionEn(e.target.value)} placeholder="A brief description of the activity..." />
-        </div>
-      </div>
-
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="schedule_ar">الموعد (عربي)</Label>
-          <Input id="schedule_ar" value={scheduleAr} onChange={(e) => setScheduleAr(e.target.value)} placeholder="مثال: كل يوم سبت" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="schedule_en">Schedule (English)</Label>
-          <Input id="schedule_en" value={scheduleEn} onChange={(e) => setScheduleEn(e.target.value)} placeholder="e.g., Every Saturday" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="time">الوقت</Label>
-          <Input id="time" value={time} onChange={(e) => setTime(e.target.value)} placeholder="4:00 PM" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="sessions">عدد الجلسات</Label>
-          <Input id="sessions" type="number" min="0" value={sessions} onChange={(e) => setSessions(Number(e.target.value))} placeholder="1" />
-        </div>
-        <div className="space-y-2">
-          <Label>نوع السعر</Label>
-          <RadioGroup value={activityType} onValueChange={setActivityType} className="flex items-center space-x-4 pt-2">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="paid" id="r-paid" />
-              <Label htmlFor="r-paid">مدفوع</Label>
+        {suggestedTags.length > 0 && (
+            <div className="space-y-2">
+                <Label>{content.suggestedTags}</Label>
+                <div className="flex flex-wrap gap-2">
+                    {suggestedTags.map((tag, index) => (
+                        <Badge key={index} variant="secondary">{tag}</Badge>
+                    ))}
+                </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="free" id="r-free" />
-              <Label htmlFor="r-free">مجاني</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-           <Label htmlFor="price">السعر</Label>
-           <Input id="price" type="number" min="0" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="100" disabled={activityType === 'free'} />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-            <Label htmlFor="type">فئة النشاط</Label>
-            <Input id="type" value={type} onChange={(e) => setType(e.target.value)} placeholder="عام" />
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="file-input">صورة النشاط</Label>
-            <Input id="file-input" type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-        </div>
-      </div>
+        )}
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "جارٍ الحفظ..." : "حفظ النشاط"}
-      </Button>
-    </form>
+        <Button type="submit" className="w-full">
+            {content.submit}
+        </Button>
+      </form>
+    </Form>
   );
 }
