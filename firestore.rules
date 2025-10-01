@@ -16,16 +16,24 @@ service cloud.firestore {
     }
     function isAdmin() { return isAdminByEmail() || isAdminByRole(); }
 
-    match /activities/{doc} { allow read: if true; allow write: if isAdmin(); }
-    match /trips/{doc} { allow read: if true; allow write: if isAdmin(); }
-    
+    // Global Read Access
+    match /{document=**} {
+      allow read: if true;
+    }
+
+    // Secure Write Operations
+    match /activities/{doc} { allow write: if isAdmin(); }
+    match /trips/{doc}      { allow write: if isAdmin(); }
+    match /gallery/{doc}    { allow write: if isAdmin(); }
+    match /suppliers/{doc}  { allow write: if isAdmin(); }
+    match /events/{doc}     { allow write: if isAdmin(); }
+
     match /users/{uid} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
     
     match /users/{uid}/subscriptions/{subId} {
-      allow read, create: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }
