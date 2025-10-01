@@ -3,51 +3,44 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isSignedIn() { return request.auth != null; }
-
     function isAdminByEmail() {
-      return isSignedIn()
-        && request.auth.token.email != null
-        && (request.auth.token.email in [
-          "hussienelbaron888@gmail.com",
-          "admin@ags-activity.com"
-        ]);
+      return isSignedIn() && request.auth.token.email in [
+        "hussienelbaron888@gmail.com",
+        "admin@ags-activity.com"
+      ];
     }
-
     function isAdminByRole() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
-
     function isAdmin() { return isAdminByEmail() || isAdminByRole(); }
 
-    match /activities/{doc} { 
-      allow read: if true; 
-      allow write: if isAdmin(); 
-    }
-    match /trips/{doc} { 
-      allow read: if true; 
-      allow write: if isAdmin(); 
-    }
-    match /gallery/{doc} { 
-      allow read: if true; 
-      allow write: if isAdmin(); 
-    }
-    match /suppliers/{doc} { 
-      allow read: if true; 
-      allow write: if isAdmin(); 
-    }
-    match /events/{doc} { 
-      allow read: if true; 
-      allow write: if isAdmin(); 
-    }
+    // activities: top-level + collection-group
+    match /activities/{doc}      { allow read: if true; allow write: if isAdmin(); }
+    match /{path=**}/activities/{doc} { allow read: if true; allow write: if isAdmin(); }
 
+    // trips: top-level + collection-group
+    match /trips/{doc}           { allow read: if true; allow write: if isAdmin(); }
+    match /{path=**}/trips/{doc} { allow read: if true; allow write: if isAdmin(); }
+
+    // Other public collections for the homepage
+    match /gallery/{doc}   { allow read: if true; allow write: if isAdmin(); }
+    match /suppliers/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /banners/{doc}   { allow read: if true; allow write: if isAdmin(); }
+    match /events/{doc}    { allow read: if true; allow write: if isAdmin(); }
+
+
+    // User profiles and role management
     match /users/{uid} {
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
-      match /subscriptions/{subId} {
-        allow read, write: if isSignedIn() && request.auth.uid == uid;
-      }
+    }
+    
+    // Subscriptions subcollection
+    match /users/{uid}/subscriptions/{subId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow list: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }
