@@ -16,7 +16,6 @@ export function useAuth() {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true); // Start loading when auth state changes
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
@@ -35,11 +34,11 @@ export function useAuth() {
           // Fallback to user role on error
           setUser({ ...firebaseUser, role: 'user' });
         } finally {
-          setLoading(false); // Stop loading after fetching role
+          setLoading(false);
         }
       } else {
         setUser(null);
-        setLoading(false); // Stop loading if no user
+        setLoading(false);
       }
     });
 
