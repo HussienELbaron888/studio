@@ -1,47 +1,47 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() { 
-      return request.auth != null; 
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    function isAdminByEmail() {
-      return isSignedIn() && request.auth.token.email in [
-        "hussienelbaron888@gmail.com",
-        "admin@ags-activity.com"
-      ];
-    }
-    function isAdminByRole() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isAdmin() { 
-      return isAdminByEmail() || isAdminByRole(); 
+    function isAdmin() {
+      // Check for role in a user document
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Public content is readable by anyone, writable only by admins
-    match /activities/{docId}   { allow read: if true; allow write: if isAdmin(); }
-    match /trips/{docId}        { allow read: if true; allow write: if isAdmin(); }
-    
-    // Users can read their own user document, admins can read/write any.
-    match /users/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
-      allow read, write: if isAdmin();
+    // Public content can be read by anyone
+    match /activities/{activityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /trips/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
-    // Rules for user-specific subcollections
-    match /users/{uid}/subscriptions/{subId} {
-        // Allow read/delete by the user who owns the subscription or an admin
-        allow read, delete: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
-        
-        // Allow create if the user is signed in and the userId in the document matches their own UID
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        
-        // Allow update by the user if they don't change the core IDs, or by an admin
-        allow update: if (isSignedIn() && request.auth.uid == uid && request.resource.data.userId == resource.data.userId && request.resource.data.activityId == resource.data.activityId && request.resource.data.tripId == resource.data.tripId) || isAdmin();
+    // Users can manage their own user document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // Users can only manage their own subscriptions
+    match /users/{userId}/subscriptions/{subscriptionId} {
+      allow read, create, delete: if isOwner(userId);
+      // Prevent users from changing the userId field after creation
+      allow update: if isOwner(userId) && request.resource.data.userId == resource.data.userId;
+    }
+    
+    // Default deny all other reads/writes
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
