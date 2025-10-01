@@ -15,11 +15,15 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash, Loader2 } from "lucide-react";
 import { AddActivityForm } from "./add-activity-form";
+import { EditActivityForm } from "./edit-activity-form";
+
 
 export function ManageActivities() {
     const { content, language } = useLanguage();
     const { toast } = useToast();
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+    const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -42,6 +46,11 @@ export function ManageActivities() {
 
         return () => unsubscribe();
     }, [toast]);
+
+    const handleEditClick = (activity: Activity) => {
+        setSelectedActivity(activity);
+        setEditDialogOpen(true);
+    };
 
     const handleDelete = async (activityId: string, imagePath: string | null | undefined) => {
         setIsDeleting(activityId);
@@ -107,7 +116,7 @@ export function ManageActivities() {
                                     <TableCell>{activity.title[language as keyof typeof activity.title]}</TableCell>
                                     <TableCell>{activity.type}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" disabled>
+                                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(activity)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <AlertDialog>
@@ -138,6 +147,22 @@ export function ManageActivities() {
                     </TableBody>
                 </Table>
             </div>
+             {selectedActivity && (
+                <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+                    <DialogContent className="sm:max-w-[525px]">
+                        <DialogHeader>
+                            <DialogTitle>Edit Activity</DialogTitle>
+                            <DialogDescription>
+                                Make changes to your activity here. Click save when you're done.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <EditActivityForm
+                            activity={selectedActivity}
+                            setDialogOpen={setEditDialogOpen}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }
