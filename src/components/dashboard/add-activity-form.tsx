@@ -70,7 +70,6 @@ export function AddActivityForm({ setDialogOpen }: AddActivityFormProps) {
       const activityRef = doc(collection(db, "activities"));
       const activityId = activityRef.id;
 
-      let imageUrl: string | null = null;
       let imagePath: string | null = null;
       
       // 2. Upload image if it exists
