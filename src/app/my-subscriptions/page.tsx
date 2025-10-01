@@ -33,8 +33,6 @@ export default function MySubscriptionsPage() {
 
   useEffect(() => {
     if (!user) {
-      // If there is no user, do not attempt to fetch subscriptions.
-      // Set loading to false and return early.
       setLoading(false);
       return;
     }
