@@ -1,8 +1,10 @@
-
 "use client";
 
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Trip } from '@/lib/types';
 import {
   Carousel,
   CarouselContent,
@@ -10,14 +12,51 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
-import { trips } from '@/lib/placeholder-data';
 import { useLanguage } from '@/context/language-context';
+import { TripCard } from '@/components/trips/trip-card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function CarouselSkeleton() {
+  return (
+    <div className="flex space-x-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="min-w-0 shrink-0 grow-0 basis-full md:basis-1/2 lg:basis-1/3 pl-4">
+          <div className="flex flex-col space-y-3">
+            <Skeleton className="h-[224px] w-full rounded-lg" />
+            <div className="space-y-2 p-4">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function TripsCarousel() {
   const { language, content } = useLanguage();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const tripsQuery = query(collection(db, 'trips'), orderBy('created_at', 'desc'), limit(6));
+    
+    const unsubscribe = onSnapshot(tripsQuery, (snapshot) => {
+      const tripsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Trip));
+      setTrips(tripsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching trips:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <section>
@@ -34,7 +73,7 @@ export function TripsCarousel() {
               {content.tripsTitle}
             </h2>
             <Button asChild variant="link" className="hidden sm:inline-flex">
-                <Link href="/activities">{content.viewAll}</Link>
+                <Link href="/trips">{content.viewAll}</Link>
             </Button>
           </div>
           <div className="hidden sm:flex items-center gap-2">
@@ -53,36 +92,21 @@ export function TripsCarousel() {
         </div>
 
         <CarouselContent>
-          {trips.map((trip) => (
-            <CarouselItem
-              key={trip.id}
-              className="md:basis-1/2 lg:basis-1/3"
-            >
-              <Card className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="relative h-56 w-full">
-                    <Image
-                      src={trip.image.imageUrl}
-                      alt={trip.image.description}
-                      fill
-                      className="object-cover"
-                      data-ai-hint={trip.image.imageHint}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-headline text-lg font-semibold">
-                      {trip.title[language]}
-                    </h3>
-                    <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                      <MapPin className={`h-4 w-4 ${language === 'ar' ? 'ml-1' : 'mr-1'}`} />
-                      <span>{trip.destination[language]}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          ))}
+          {loading ? (
+            <CarouselSkeleton />
+          ) : (
+            trips.map((trip) => (
+              <CarouselItem
+                key={trip.id}
+                className="md:basis-1/2 lg:basis-1/3"
+              >
+                <TripCard 
+                  trip={trip}
+                  imageSizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </CarouselItem>
+            ))
+          )}
         </CarouselContent>
         <div className="sm:hidden mt-4 flex items-center justify-center gap-4">
            {language === 'ar' ? (
@@ -98,7 +122,7 @@ export function TripsCarousel() {
             )}
         </div>
         <Button asChild variant="link" className="mt-4 w-full sm:hidden">
-            <Link href="/activities">{content.viewAll}</Link>
+            <Link href="/trips">{content.viewAll}</Link>
         </Button>
       </Carousel>
     </section>

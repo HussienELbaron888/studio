@@ -1,38 +1,35 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
     function isAdmin() {
-      // Check if the user's document in 'users' collection has the role 'admin'
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Rules for the 'users' collection
-    match /users/{userId} {
-      // Admins can read/write any user document. Users can only read/write their own.
-      allow read, write: if request.auth.uid == userId || isAdmin();
+    match /users/{uid} {
+      allow read, write: if isUser(uid) || isAdmin();
     }
 
-    // Rules for the 'activities' collection
     match /activities/{activityId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // Rules for the 'trips' collection
-    match /trips/{tripId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    // Rules for user-specific subcollections like 'subscriptions'
-    match /users/{userId}/subscriptions/{subscriptionId} {
-      // Users can only read and create their own subscriptions.
-      allow read, create: if request.auth.uid == userId;
-      // Admins can't delete subscriptions from here as a safeguard. This should be a server-side action if needed.
-      allow update, delete: if false; 
+    match /trips/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/subscriptions/{subscriptionId} {
+      allow read, create: if isUser(uid);
     }
   }
 }
