@@ -40,15 +40,12 @@ export function ManageActivities() {
             setLoading(false);
         }, (error) => {
             if (error.code === 'permission-denied') {
-                // This can happen if a non-admin user somehow accesses the dashboard.
-                // We'll just show an empty list and log a warning.
                 console.warn('Permission denied fetching activities for dashboard.');
-                setLoading(false);
-                return;
+            } else {
+                console.error("Error fetching activities:", error);
+                toast({ title: "Error", description: "Could not fetch activities.", variant: "destructive" });
             }
-            console.error("Error fetching activities:", error);
             setLoading(false);
-            toast({ title: "Error", description: "Could not fetch activities.", variant: "destructive" });
         });
 
         return () => unsubscribe();

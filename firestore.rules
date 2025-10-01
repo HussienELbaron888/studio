@@ -3,32 +3,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper Functions
+    function isSignedIn() { 
+      return request.auth != null; 
     }
-
+    function isUser(uid) { 
+      return isSignedIn() && request.auth.uid == uid; 
+    }
     function isAdmin() {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    match /{document=**} {
+    // Public content is readable by anyone, but only writable by admins.
+    match /activities/{docId} {
       allow read: if true;
-    }
-
-    match /activities/{doc} {
       allow write: if isAdmin();
     }
-    match /trips/{doc} {
+    match /trips/{docId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
+    match /gallery/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    // Add other public collections here following the same pattern.
     
+    // User-specific data
     match /users/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
-      allow write: if isAdmin();
-    }
-    
-    match /users/{uid}/subscriptions/{subId} {
-      allow read, create: if isSignedIn() && request.auth.uid == uid;
+      // Admins can read any user profile. Users can only read their own.
+      allow read: if isAdmin() || isUser(uid);
+      // Users can write to their own document, admins can write to any.
+      allow write: if isAdmin() || isUser(uid);
+
+      // Subscriptions are private to each user.
+      match /subscriptions/{subId} {
+        // Users can read and create subscriptions for themselves.
+        allow read, create: if isUser(uid);
+        // Only admins or the user who owns the subscription can update/delete it.
+        allow update, delete: if isAdmin() || isUser(uid);
+      }
     }
   }
 }

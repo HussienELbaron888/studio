@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Activity } from '@/lib/types';
 import {
@@ -41,25 +42,23 @@ export function ActivitiesCarousel() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const activitiesQuery = query(collection(db, 'activities'), orderBy('created_at', 'desc'), limit(6));
-    
-    const unsubscribe = onSnapshot(activitiesQuery, (snapshot) => {
-      const activitiesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Activity));
-      setActivities(activitiesData);
-      setLoading(false);
-    }, (error) => {
-      if (error.code === 'permission-denied') {
+    const fetchActivities = async () => {
+      try {
+        const activitiesQuery = query(collection(db, 'activities'), orderBy('created_at', 'desc'), limit(6));
+        const snapshot = await getDocs(activitiesQuery);
+        const activitiesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Activity));
+        setActivities(activitiesData);
+      } catch (error) {
+        console.error("Error fetching activities for carousel:", error);
+      } finally {
         setLoading(false);
-        return; // Silently ignore for public carousel
       }
-      console.error("Error fetching activities:", error);
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchActivities();
   }, []);
 
   return (

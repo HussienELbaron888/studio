@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Activity } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
@@ -30,26 +31,23 @@ export default function ActivitiesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const activitiesQuery = query(collection(db, 'activities'), orderBy('created_at', 'desc'));
-    
-    const unsubscribe = onSnapshot(activitiesQuery, (snapshot) => {
-      const activitiesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Activity));
-      setActivities(activitiesData);
-      setLoading(false);
-    }, (error) => {
-      if (error.code === 'permission-denied') {
-        console.warn('Permission denied for activities collection. This might be expected for some users.');
+    const fetchActivities = async () => {
+      try {
+        const activitiesQuery = query(collection(db, 'activities'), orderBy('created_at', 'desc'));
+        const snapshot = await getDocs(activitiesQuery);
+        const activitiesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Activity));
+        setActivities(activitiesData);
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+      } finally {
         setLoading(false);
-        return;
       }
-      console.error("Error fetching activities:", error);
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchActivities();
   }, []);
 
   return (

@@ -80,9 +80,11 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setIsSubscribed(!querySnapshot.empty);
     }, (error) => {
-      if (error.code !== 'permission-denied') {
-          console.error("Subscription check failed:", error);
+      if (error.code === 'permission-denied') {
+          console.warn("Permission check failed for activity subscription. This may be expected.");
+          return;
       }
+      console.error("Subscription check failed:", error);
     });
 
     return () => unsubscribe();

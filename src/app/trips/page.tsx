@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Trip } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
@@ -30,26 +31,23 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tripsQuery = query(collection(db, 'trips'), orderBy('created_at', 'desc'));
-    
-    const unsubscribe = onSnapshot(tripsQuery, (snapshot) => {
-      const tripsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Trip));
-      setTrips(tripsData);
-      setLoading(false);
-    }, (error) => {
-      if (error.code === 'permission-denied') {
-        console.warn('Permission denied for trips collection. This might be expected for some users.');
+    const fetchTrips = async () => {
+      try {
+        const tripsQuery = query(collection(db, 'trips'), orderBy('created_at', 'desc'));
+        const snapshot = await getDocs(tripsQuery);
+        const tripsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Trip));
+        setTrips(tripsData);
+      } catch (error) {
+        console.error("Error fetching trips:", error);
+      } finally {
         setLoading(false);
-        return;
       }
-      console.error("Error fetching trips:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    
+    fetchTrips();
   }, []);
 
   return (

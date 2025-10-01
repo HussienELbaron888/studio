@@ -53,8 +53,7 @@ export default function MySubscriptionsPage() {
       console.error("Error fetching subscriptions:", error);
       // Silently ignore permission errors, which might happen briefly during auth state changes.
       if (error.code === 'permission-denied') {
-        setLoading(false);
-        return;
+         console.warn("Permission denied for subscriptions. This may be expected.");
       }
       setLoading(false);
     });

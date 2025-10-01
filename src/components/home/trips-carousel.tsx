@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Trip } from '@/lib/types';
 import {
@@ -41,25 +42,23 @@ export function TripsCarousel() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tripsQuery = query(collection(db, 'trips'), orderBy('created_at', 'desc'), limit(6));
-    
-    const unsubscribe = onSnapshot(tripsQuery, (snapshot) => {
-      const tripsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Trip));
-      setTrips(tripsData);
-      setLoading(false);
-    }, (error) => {
-      if (error.code === 'permission-denied') {
+    const fetchTrips = async () => {
+      try {
+        const tripsQuery = query(collection(db, 'trips'), orderBy('created_at', 'desc'), limit(6));
+        const snapshot = await getDocs(tripsQuery);
+        const tripsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Trip));
+        setTrips(tripsData);
+      } catch (error) {
+        console.error("Error fetching trips for carousel:", error);
+      } finally {
         setLoading(false);
-        return; // Silently ignore for public carousel
       }
-      console.error("Error fetching trips:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    
+    fetchTrips();
   }, []);
 
   return (
