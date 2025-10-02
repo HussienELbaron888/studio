@@ -87,11 +87,11 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       }
 
       setDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving subscription:", error);
       toast({
         title: "Error",
-        description: "Failed to save subscription. Please try again.",
+        description: `Failed to save subscription: ${error.message}`,
         variant: "destructive",
       });
     }
