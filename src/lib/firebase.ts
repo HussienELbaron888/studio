@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAF7BK3glD5I3QLB15k750mytV3N0LuAE4",
@@ -15,6 +16,7 @@ const firebaseConfig = {
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const functions = getFunctions(app, 'us-central1');
 
 // 👈 أجبر الـ SDK على نفس البكت في كل مكان
 export const storage = getStorage(app, `gs://${firebaseConfig.storageBucket}`);

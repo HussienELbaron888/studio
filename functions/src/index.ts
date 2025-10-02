@@ -3,11 +3,14 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
   initializeApp();
 }
+
+const db = getFirestore();
 
 const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
@@ -155,6 +158,55 @@ export const grantAdmin = onCall(
       console.error("Failed to grant admin role:", msg);
       // eslint-disable-next-line max-len
       throw new HttpsError("not-found", `User not found or an error occurred: ${msg}`);
+    }
+  }
+);
+
+
+export const getStats = onCall(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async () => {
+    try {
+      const [
+        subscriptionsSnap,
+        activitiesSnap,
+        eventsSnap,
+        tripsSnap,
+        talentsSnap,
+      ] = await Promise.all([
+        db.collection("subscriptions").count().get(),
+        db.collection("activities").get(),
+        db.collection("events").count().get(),
+        db.collection("trips").count().get(),
+        db.collection("talents").count().get(),
+      ]);
+
+      let paidActivities = 0;
+      let freeActivities = 0;
+      activitiesSnap.forEach((doc) => {
+        if (doc.data().type === "Paid") {
+          paidActivities++;
+        } else {
+          freeActivities++;
+        }
+      });
+
+      return {
+        subscriptions: subscriptionsSnap.data().count,
+        paidActivities: paidActivities,
+        freeActivities: freeActivities,
+        events: eventsSnap.data().count,
+        trips: tripsSnap.data().count,
+        talents: talentsSnap.data().count,
+      };
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to get stats:", msg);
+      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
     }
   }
 );

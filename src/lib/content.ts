@@ -1,4 +1,3 @@
-
 export const content = {
   en: {
     // Header
@@ -17,10 +16,15 @@ export const content = {
     navDashboard: 'Dashboard',
     // Homepage
     statsTitle: 'Our Community in Numbers',
+    statsSubtitle: 'We are proud to offer a diverse range of distinctive educational and recreational activities and programs.',
     members: 'Members',
     activities: 'Activities',
     events: 'Events',
     talents: 'Talents',
+    trips: 'Trips',
+    totalSubscriptions: 'Total Subscriptions',
+    paidActivities: 'Paid Activities',
+    freeActivities: 'Free Activities',
     activitiesTitle: 'Latest Activities',
     free: 'Free',
     paid: 'Paid',
@@ -107,11 +111,16 @@ export const content = {
     navContact: 'اتصل بنا',
     navDashboard: 'لوحة التحكم',
     // Homepage
-    statsTitle: 'مجتمعنا في أرقام',
+    statsTitle: 'إحصائياتنا',
+    statsSubtitle: 'نفخر بتقديم مجموعة متنوعة من الأنشطة والبرامج التعليمية والترفيهية المميزة.',
     members: 'عضو',
     activities: 'نشاط',
-    events: 'فعالية',
-    talents: 'موهبة',
+    events: 'الفعاليات',
+    talents: 'المواهب',
+    trips: 'الرحلات',
+    totalSubscriptions: 'إجمالي الاشتراكات',
+    paidActivities: 'الأنشطة المدفوعة',
+    freeActivities: 'الأنشطة المجانية',
     activitiesTitle: 'أحدث الأنشطة',
     free: 'مجاني',
     paid: 'مدفوع',
