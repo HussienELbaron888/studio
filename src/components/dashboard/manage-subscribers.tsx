@@ -245,7 +245,7 @@ export function ManageSubscribers() {
                     <TableCell>{r.userEmail}</TableCell>
                     <TableCell>{r.subscribedAt?.toLocaleDateString() ?? "-"}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenEmailDialog([r.userEmail].filter(Boolean))}>
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEmailDialog([r.userEmail].filter(Boolean))} disabled={!r.userEmail}>
                         <Mail className="h-4 w-4"/>
                       </Button>
                        <Button variant="ghost" size="icon" onClick={() => deleteOne(r.path)} className="text-destructive hover:text-destructive">

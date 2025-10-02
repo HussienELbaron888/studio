@@ -61,6 +61,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
         userId: user.uid,
         userEmail: user.email,
         activityId: activityId,
+        itemId: activityId,
         itemTitle: activityTitle,
         itemType: 'activity',
         subscribedAt: serverTimestamp(),

@@ -62,6 +62,7 @@ export function EventSubscriptionForm({ setDialogOpen, eventTitle, eventId }: Su
         userId: user.uid,
         userEmail: user.email,
         eventId: eventId,
+        itemId: eventId,
         itemTitle: eventTitle,
         itemType: 'event',
         subscribedAt: serverTimestamp(),

@@ -62,6 +62,7 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
         userId: user.uid,
         userEmail: user.email,
         tripId: tripId,
+        itemId: tripId,
         itemTitle: tripTitle,
         itemType: 'trip',
         subscribedAt: serverTimestamp(),
