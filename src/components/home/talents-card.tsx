@@ -1,28 +1,89 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { resolveStorageURL } from '@/utils/storage-url';
+import type { Talent } from '@/lib/types';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/context/language-context';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TalentsCard() {
   const { content, language } = useLanguage();
-  const image = PlaceHolderImages.find((img) => img.id === 'talents-bg')!;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageHint, setImageHint] = useState<string>('');
+  const [imageAlt, setImageAlt] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  const fallbackImage = PlaceHolderImages.find((img) => img.id === 'talents-bg')!;
+
+  useEffect(() => {
+    const fetchLatestTalentImage = async () => {
+      try {
+        const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
+        const snapshot = await getDocs(talentsQuery);
+        
+        if (!snapshot.empty) {
+          const latestTalent = snapshot.docs[0].data() as Talent;
+          if (latestTalent.image_path) {
+            const url = await resolveStorageURL(latestTalent.image_path);
+            if (url) {
+              setImageUrl(url);
+              setImageAlt(latestTalent.name.en);
+              setImageHint('student portrait'); // Generic hint
+            } else {
+              setImageUrl(fallbackImage.imageUrl);
+              setImageAlt(fallbackImage.description);
+              setImageHint(fallbackImage.imageHint);
+            }
+          } else {
+             setImageUrl(fallbackImage.imageUrl);
+             setImageAlt(fallbackImage.description);
+             setImageHint(fallbackImage.imageHint);
+          }
+        } else {
+          setImageUrl(fallbackImage.imageUrl);
+          setImageAlt(fallbackImage.description);
+          setImageHint(fallbackImage.imageHint);
+        }
+      } catch (error) {
+        console.error("Error fetching latest talent:", error);
+        // On error, use fallback
+        setImageUrl(fallbackImage.imageUrl);
+        setImageAlt(fallbackImage.description);
+        setImageHint(fallbackImage.imageHint);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestTalentImage();
+  }, [fallbackImage]);
 
   return (
     <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px]">
-      <Image
-        src={image.imageUrl}
-        alt={image.description}
-        fill
-        className="object-cover transition-transform duration-500 group-hover:scale-105"
-        data-ai-hint={image.imageHint}
-        sizes="(max-width: 768px) 100vw, 50vw"
-      />
+      {loading ? (
+        <Skeleton className="absolute inset-0" />
+      ) : (
+        imageUrl && (
+            <Image
+                src={imageUrl}
+                alt={imageAlt}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                data-ai-hint={imageHint}
+                sizes="(max-width: 768px) 100vw, 50vw"
+            />
+        )
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       <CardContent className="relative z-10 p-6 text-white">
         <h3 className="font-headline text-2xl font-bold md:text-3xl">
