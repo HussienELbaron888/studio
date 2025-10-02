@@ -1,10 +1,9 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+import {getFirestore} from "firebase-admin/firestore";
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
@@ -164,14 +163,13 @@ export const grantAdmin = onCall(
 );
 
 
-export const getStats = onRequest(
+export const getStats = onCall(
   {
     region: "us-central1",
     timeoutSeconds: 30,
     memory: "256MiB",
-    cors: true, 
   },
-  async (req, res) => {
+  async () => {
     try {
       const [
         subscriptionsSnap,
@@ -196,7 +194,7 @@ export const getStats = onRequest(
           freeActivities++;
         }
       });
-      
+
       const stats = {
         subscriptions: subscriptionsSnap.data().count,
         paidActivities: paidActivities,
@@ -205,13 +203,12 @@ export const getStats = onRequest(
         trips: tripsSnap.data().count,
         talents: talentsSnap.data().count,
       };
-      
-      res.status(200).json(stats);
 
+      return {ok: true, data: stats};
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Failed to get stats:", msg);
-      res.status(500).json({ error: `Failed to get stats: ${msg}` });
+      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
     }
   }
 );
@@ -222,16 +219,26 @@ export const sendAdminEmail = onCall(
     region: "us-central1",
     timeoutSeconds: 30,
     memory: "256MiB",
-    cors: true,
   },
   async (req) => {
+    const ctx = req.auth;
+    if (!ctx) {
+      throw new HttpsError("unauthenticated", "Login required to send emails.");
+    }
+
+    // This checks custom claims on the user's token
+    const role = (ctx.token.role as string) || "user";
+    if (role !== "admin") {
+      throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
+    }
+
     const {to, subject, html, text} = req.data || {};
 
     if (!Array.isArray(to) || to.length === 0) {
       throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
     }
     if (!subject || (!html && !text)) {
-      throw new HttpsError("invalid-argument", "subject and (html or text) are required.");
+      throw new HttpsError("invalid-argument", "Subject and (html or text) are required.");
     }
 
     const apiKey = BREVO_API_KEY.value();

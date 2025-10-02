@@ -9,6 +9,7 @@ import { Users, Star, Plane, Calendar, CreditCard, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
+import { useToast } from '@/hooks/use-toast';
 
 const getStats = httpsCallable(functions, 'getStats');
 
@@ -52,16 +53,26 @@ const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.
 
 export function StatsSection() {
   const { content } = useLanguage();
+  const { toast } = useToast();
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const result = await getStats();
-        setStatsData(result.data);
-      } catch (error) {
+        const result: any = await getStats();
+        if (result.data.ok) {
+           setStatsData(result.data.data);
+        } else {
+            throw new Error(result.data.error || "Failed to fetch stats");
+        }
+      } catch (error: any) {
         console.error("Error fetching stats:", error);
+         toast({
+          title: "Error fetching stats",
+          description: error.message,
+          variant: "destructive",
+        });
         // Set to zero on error to avoid breaking the UI
         setStatsData({
           subscriptions: 0,
@@ -76,7 +87,7 @@ export function StatsSection() {
       }
     };
     fetchStats();
-  }, []);
+  }, [toast]);
 
   const stats = [
     { key: 'subscriptions', label: content.totalSubscriptions, icon: Users, color: 'blue' },
