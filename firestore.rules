@@ -1,51 +1,38 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions
+    
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isAdmin() {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    /* ---------- Activities & Trips (Content) ---------- */
-    // Public can read, only admins can write.
+    match /users/{userId} {
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+    }
+
     match /activities/{activityId} {
-      allow read: if true;
-      allow write: if isAdmin();
+        allow read: if true;
+        allow write: if isAdmin();
     }
 
     match /trips/{tripId} {
-      allow read: if true;
-      allow write: if isAdmin();
+        allow read: if true;
+        allow write: if isAdmin();
     }
-
-    /* ---------- Users ---------- */
-    // Users can create their own user document.
-    // Users can read/update their own document.
-    // Admins have full access.
-    match /users/{userId} {
-      allow read, update: if isOwner(userId) || isAdmin();
-      allow create: if isSignedIn();
-      allow delete: if isAdmin();
-    }
-
-    /* ---------- Subscriptions ---------- */
-    // Users can create their own subscriptions.
-    // Users can read, update, delete their own subscriptions.
-    // Admins have full access.
+    
     match /subscriptions/{subscriptionId} {
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+        allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
   }
 }
