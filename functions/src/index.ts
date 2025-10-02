@@ -1,3 +1,4 @@
+
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
@@ -116,24 +117,42 @@ export const sendConfirmationEmail = onCall(
   }
 );
 
+type GrantData = {
+  email?: string;
+  key?: string;
+};
 
 export const grantAdmin = onCall(
-  {secrets: [ADMIN_GRANT_KEY], region: "us-central1", timeoutSeconds: 15},
+  {
+    secrets: [ADMIN_GRANT_KEY],
+    region: "us-central1",
+    timeoutSeconds: 15,
+  },
   async (req) => {
-    const {email, key} = (req.data || {}) as { email?: string; key?: string };
+    const data = (req.data ?? {}) as GrantData;
+
+    const email = (data.email ?? "").trim();
+    const key = data.key ?? "";
+
     if (!email || !key) {
-      throw new HttpsError("invalid-argument", "email and key required");
+      throw new HttpsError(
+        "invalid-argument",
+        "email and key required"
+      );
     }
+
     if (key !== ADMIN_GRANT_KEY.value()) {
       throw new HttpsError("permission-denied", "invalid key");
     }
+
     try {
       const user = await getAdminAuth().getUserByEmail(email);
       await getAdminAuth().setCustomUserClaims(user.uid, {role: "admin"});
       return {ok: true, uid: user.uid};
-    } catch (error: any) {
-      console.error("Failed to grant admin role:", error);
-      throw new HttpsError("not-found", `User not found or an error occurred: ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to grant admin role:", msg);
+      throw new HttpsError("not-found", `User not found or an error occurred: ${msg}`);
     }
   }
 );
