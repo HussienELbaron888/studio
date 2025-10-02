@@ -15,6 +15,23 @@ import { ManageActivities } from '@/components/dashboard/manage-activities';
 import { ManageTrips } from '@/components/dashboard/manage-trips';
 import { ManageEvents } from '@/components/dashboard/manage-events';
 import { Loader2 } from 'lucide-react';
+import { getAuth } from "firebase/auth";
+
+// Temporary debug function to check claims from browser console
+if (typeof window !== "undefined") {
+  (window as any).checkClaims = async () => {
+    const u = getAuth().currentUser;
+    if (!u) {
+      console.log("No user logged in");
+      return null;
+    }
+    // Force token refresh to get latest claims
+    const t = await u.getIdTokenResult(true);
+    console.log("claims:", t.claims);
+    return t.claims;
+  };
+}
+
 
 export default function DashboardPage() {
   const { content } = useLanguage();
