@@ -19,6 +19,7 @@ import { ManageGallery } from '@/components/dashboard/manage-gallery';
 import { ManageSlider } from '@/components/dashboard/manage-slider';
 import { Loader2 } from 'lucide-react';
 import { getAuth } from "firebase/auth";
+import { ManageSubscribers } from '@/components/dashboard/manage-subscribers';
 
 // Temporary debug function to check claims from browser console
 if (typeof window !== "undefined") {
@@ -62,6 +63,7 @@ export default function DashboardPage() {
     { value: 'talents', label: content.manageTalents, component: <ManageTalents /> },
     { value: 'gallery', label: content.manageGallery, component: <ManageGallery /> },
     { value: 'slider', label: content.manageSlider, component: <ManageSlider /> },
+    { value: 'subscribers', label: content.manageSubscribers, component: <ManageSubscribers /> },
   ];
 
   return (
@@ -70,7 +72,7 @@ export default function DashboardPage() {
         {content.dashboardTitle}
       </h1>
       <Tabs defaultValue="activities" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
           {tabs.map(tab => (
             <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
           ))}

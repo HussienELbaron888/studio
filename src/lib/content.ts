@@ -1,3 +1,4 @@
+
 export const content = {
   en: {
     // Header
@@ -61,6 +62,7 @@ export const content = {
     manageTalents: 'Talents',
     manageGallery: 'Gallery',
     manageSlider: 'Slider',
+    manageSubscribers: 'Subscribers',
     addActivity: 'Add Activity',
     activityTitleLabel: 'Activity Title',
     activityDescriptionLabel: 'Description',
@@ -158,6 +160,7 @@ export const content = {
     manageTalents: 'الموهوبين',
     manageGallery: 'المعرض',
     manageSlider: 'السلايدر',
+    manageSubscribers: 'المشتركون',
     addActivity: 'إضافة نشاط',
     activityTitleLabel: 'عنوان النشاط',
     activityDescriptionLabel: 'الوصف',

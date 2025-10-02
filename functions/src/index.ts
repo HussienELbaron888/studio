@@ -211,3 +211,63 @@ export const getStats = onCall(
     }
   }
 );
+
+export const sendAdminEmail = onCall(
+  {
+    secrets: [BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME],
+    region: "us-central1",
+    timeoutSeconds: 30,
+    memory: "256MiB",
+    cors: true,
+  },
+  async (req) => {
+    const {to, subject, html, text} = req.data || {};
+
+    if (!Array.isArray(to) || to.length === 0) {
+      throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
+    }
+    if (!subject || (!html && !text)) {
+      throw new HttpsError("invalid-argument", "subject and (html or text) are required.");
+    }
+
+    const apiKey = BREVO_API_KEY.value();
+    const fromEmail = BREVO_FROM_EMAIL.value();
+    const fromName = BREVO_FROM_NAME.value() || "AGS Activity Platform";
+
+    if (!apiKey || !fromEmail) {
+      throw new HttpsError("failed-precondition", "Brevo environment variables are missing.");
+    }
+
+    const recipients = [...new Set(to as string[])].map((email: string) => ({email}));
+
+    const payload = {
+      sender: {email: fromEmail, name: fromName},
+      to: recipients,
+      subject,
+      htmlContent: html || undefined,
+      textContent: text || undefined,
+    };
+
+    try {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": apiKey,
+          "content-type": "application/json",
+          "accept": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error(`Brevo error: ${res.status}`, msg);
+        throw new HttpsError("internal", `Brevo API error: ${res.status} ${msg}`);
+      }
+      return {ok: true};
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to send admin email:", msg);
+      throw new HttpsError("internal", msg);
+    }
+  });
