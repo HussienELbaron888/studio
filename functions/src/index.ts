@@ -1,3 +1,4 @@
+
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 
@@ -5,6 +6,7 @@ const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
 const BREVO_FROM_NAME = defineSecret("BREVO_FROM_NAME");
 const ADMIN_EMAIL = defineSecret("ADMIN_EMAIL");
+const ADMIN_EMAILS = defineSecret("ADMIN_EMAILS");
 
 // غيّر المنطقة هنا لو حابب، واحرص تطابق الواجهة.
 // مثال: "us-central1" أو "europe-west6".
@@ -15,6 +17,7 @@ export const sendConfirmationEmail = onCall(
       BREVO_FROM_EMAIL,
       BREVO_FROM_NAME,
       ADMIN_EMAIL,
+      ADMIN_EMAILS,
     ],
     region: "us-central1",
     timeoutSeconds: 30,
@@ -43,8 +46,17 @@ export const sendConfirmationEmail = onCall(
       BREVO_FROM_EMAIL.value() || "noreply@ags-activity.com";
     const fromName =
       BREVO_FROM_NAME.value() || "AGS Activity Platform";
-    const adminEmail =
-      ADMIN_EMAIL.value() || "admin@example.com";
+
+    // Handle admin emails for CC
+    const adminRaw = (ADMIN_EMAILS.value() || ADMIN_EMAIL.value() || "").trim();
+    const split = adminRaw
+      ? adminRaw.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    const adminList = split.filter(e => emailRegex.test(e));
+
+    const cc = adminList.length ? adminList.map(e => ({email: e})) : undefined;
+    const replyTo = adminList.length ? {email: adminList[0], name: fromName} : undefined;
 
     try {
       const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -57,7 +69,8 @@ export const sendConfirmationEmail = onCall(
         body: JSON.stringify({
           sender: {email: fromEmail, name: fromName},
           to: [{email: to}],
-          cc: [{email: adminEmail}],
+          ...(cc && { cc }),
+          ...(replyTo && { replyTo }),
           subject,
           htmlContent: html,
         }),
