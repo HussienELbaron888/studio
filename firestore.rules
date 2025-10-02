@@ -1,38 +1,58 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isUser(uid) {
+      return request.auth.uid == uid;
     }
 
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth.token.role == 'admin';
     }
 
+    // USERS:
+    // 1. Can read their own user document.
+    // 2. Admins can read any user document.
+    // 3. No one can write to user documents directly (managed server-side on creation).
     match /users/{userId} {
-      allow read, update: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
+      allow read: if isUser(userId) || isAdmin();
+      allow write: if false; // Should be managed server-side
     }
 
+    // ACTIVITIES, TRIPS, EVENTS:
+    // 1. Anyone can read.
+    // 2. Only admins can create, update, or delete.
     match /activities/{activityId} {
-        allow read: if true;
-        allow write: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /trips/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+     match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    match /trips/{tripId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-    
+    // SUBSCRIPTIONS:
+    // 1. Users can create a subscription for themselves.
+    // 2. Users can read/update/delete their own subscriptions.
+    // 3. Admins can read/write all subscriptions.
     match /subscriptions/{subscriptionId} {
-        allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+
+    // Fallback rule: Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

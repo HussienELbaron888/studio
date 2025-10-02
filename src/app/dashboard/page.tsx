@@ -13,6 +13,7 @@ import {
 import { useLanguage } from '@/context/language-context';
 import { ManageActivities } from '@/components/dashboard/manage-activities';
 import { ManageTrips } from '@/components/dashboard/manage-trips';
+import { ManageEvents } from '@/components/dashboard/manage-events';
 import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -37,7 +38,7 @@ export default function DashboardPage() {
   const tabs = [
     { value: 'activities', label: content.manageActivities, component: <ManageActivities /> },
     { value: 'trips', label: content.manageTrips, component: <ManageTrips /> },
-    { value: 'events', label: content.manageEvents, component: <p className="p-4 text-muted-foreground">Manage Events content here.</p> },
+    { value: 'events', label: content.manageEvents, component: <ManageEvents /> },
     { value: 'talents', label: content.manageTalents, component: <p className="p-4 text-muted-foreground">Manage Talents content here.</p> },
     { value: 'gallery', label: content.manageGallery, component: <p className="p-4 text-muted-foreground">Manage Gallery content here.</p> },
     { value: 'slider', label: content.manageSlider, component: <p className="p-4 text-muted-foreground">Manage Slider content here.</p> },

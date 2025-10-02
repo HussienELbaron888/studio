@@ -27,3 +27,13 @@ export type Trip = {
   image_path?: string | null;
   created_at?: any;
 };
+
+export type Event = {
+  id: string; // Firestore document ID
+  title: { en: string; ar: string };
+  description: { en: string; ar: string };
+  location: { en: string; ar: string };
+  price?: number;
+  image_path?: string | null;
+  created_at?: any;
+};
