@@ -13,7 +13,7 @@ import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { sendEmail } from "@/ai/flows/send-email-flow";
+import { sendConfirmationEmail } from "@/lib/email";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -26,6 +26,18 @@ type SubscriptionFormProps = {
   tripTitle: string;
   tripId: string;
 }
+
+const emailHtmlTemplate = (studentName: string, itemTitle: string) => `
+  <div dir="rtl" style="font-family:Arial, sans-serif; line-height:1.6; text-align: right;">
+    <h3>تأكيد الاشتراك</h3>
+    <p>مرحباً ${studentName}،</p>
+    <p>لقد استلمنا طلب اشتراكك في رحلة: <strong>${itemTitle}</strong>.</p>
+    <p>سيتم التواصل معك قريباً لتأكيد التفاصيل وإتمام الإجراءات.</p>
+    <br>
+    <p>مع تحياتنا،</p>
+    <p><strong>فريق الرحلات في النادي</strong></p>
+  </div>
+`;
 
 export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: SubscriptionFormProps) {
   const { content } = useLanguage();
@@ -63,25 +75,22 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
         itemType: 'trip',
         subscribedAt: serverTimestamp(),
       };
-      console.log("Trip subscription payload:", payload);
       await addDoc(subscriptionsRef, payload);
 
-      const emailResult = await sendEmail({
-        studentName: values.studentName,
-        itemTitle: tripTitle,
-        userEmail: user.email,
-        itemType: 'Trip'
-      });
+      const subject = `تأكيد الاشتراك في رحلة: ${tripTitle}`;
+      const htmlContent = emailHtmlTemplate(values.studentName, tripTitle);
 
-      if (emailResult.success) {
+      const emailResult = await sendConfirmationEmail(user.email, subject, htmlContent);
+
+       if (emailResult.success) {
         toast({
             title: content.subscriptionSuccessTitle,
-            description: content.subscriptionSuccessMessage,
+            description: "تم إرسال بريد تأكيدي لاشتراكك.",
         });
       } else {
          toast({
-            title: "Subscription successful, but email failed",
-            description: `Could not send confirmation email. Reason: ${emailResult.error}`,
+            title: "تم الاشتراك، لكن فشل إرسال البريد",
+            description: `لم نتمكن من إرسال بريد التأكيد. السبب: ${emailResult.error}`,
             variant: "destructive"
         });
       }
