@@ -2,6 +2,7 @@
 "use client";
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -32,13 +33,16 @@ export function EventsCard() {
           {content.eventsDescription}
         </p>
         <Button
+          asChild
           size="lg"
           className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          <span>{content.eventsButton}</span>
-          <ArrowRight
-            className={cn('h-5 w-5', language === 'ar' ? 'mr-2' : 'ml-2')}
-          />
+          <Link href="/events">
+            <span>{content.eventsButton}</span>
+            <ArrowRight
+              className={cn('h-5 w-5', language === 'ar' ? 'mr-2' : 'ml-2')}
+            />
+          </Link>
         </Button>
       </CardContent>
     </Card>

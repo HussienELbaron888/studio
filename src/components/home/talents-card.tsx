@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { resolveStorageURL } from '@/utils/storage-url';
@@ -93,13 +94,16 @@ export function TalentsCard() {
           {content.talentsDescription}
         </p>
         <Button
+          asChild
           size="lg"
           className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          <span>{content.talentsButton}</span>
-          <ArrowRight
-            className={cn('h-5 w-5', language === 'ar' ? 'mr-2' : 'ml-2')}
-          />
+          <Link href="/talents">
+            <span>{content.talentsButton}</span>
+            <ArrowRight
+              className={cn('h-5 w-5', language === 'ar' ? 'mr-2' : 'ml-2')}
+            />
+          </Link>
         </Button>
       </CardContent>
     </Card>
