@@ -153,6 +153,7 @@ export const grantAdmin = onCall(
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Failed to grant admin role:", msg);
+      // eslint-disable-next-line max-len
       throw new HttpsError("not-found", `User not found or an error occurred: ${msg}`);
     }
   }
