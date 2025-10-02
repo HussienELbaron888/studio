@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -215,7 +216,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("group peer hidden md:block text-sidebar-foreground sticky top-16 h-[calc(100vh-4rem)]", className)}
+        className={cn("group peer hidden md:block text-sidebar-foreground sticky top-20 h-[calc(100vh-5rem)]", className)}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
@@ -302,7 +303,7 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       className={cn(
         "flex-1 flex flex-col",
-        "min-h-[calc(100vh-4rem)] bg-background",
+        "min-h-[calc(100vh-5rem)] bg-background",
         className
       )}
       {...props}
