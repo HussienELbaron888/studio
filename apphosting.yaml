@@ -5,7 +5,25 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
-#This is a comment to trigger a new build
+
+env:
+  - variable: BREVO_API_KEY
+    secret: BREVO_API_KEY # This secret must be created in Google Cloud Secret Manager
+    availability:
+      - RUNTIME
+  - variable: ADMIN_EMAIL
+    value: "hussienelbaron888@gmail.com"
+    availability:
+      - RUNTIME
+  - variable: BREVO_FROM_EMAIL
+    value: "hussienelbaron888@gmail.com"
+    availability:
+      - RUNTIME
+  - variable: BREVO_FROM_NAME
+    value: "Al-Nadi Activities Hub"
+    availability:
+      - RUNTIME
+
 gcs:
   - bucket: studio-3721710978-c50cb.appspot.com
     cors:

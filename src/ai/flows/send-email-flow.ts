@@ -1,4 +1,3 @@
-
 // src/ai/flows/send-email-flow.ts
 'use server';
 
@@ -37,15 +36,21 @@ const sendEmailFlow = ai.defineFlow(
   async (payload) => {
     const { studentName, itemTitle, itemType, userEmail } = payload;
     const brevoApiKey = process.env.BREVO_API_KEY;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const senderEmail = process.env.BREVO_FROM_EMAIL;
+    const senderName = process.env.BREVO_FROM_NAME || 'Al-Nadi Activities';
 
-    if (!brevoApiKey || brevoApiKey === 'YOUR_BREVO_API_KEY') {
-      const errorMessage = 'Brevo API key is not set. Please ensure it is in your .env file and restart the server.';
+
+    if (!brevoApiKey) {
+      const errorMessage = 'Brevo API key is not set. Please ensure it is configured in apphosting.yaml as a secret.';
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
-
-    const adminEmail = 'hussienelbaron888@gmail.com';
-    const senderEmail = 'hussienelbaron888@gmail.com';
+     if (!adminEmail || !senderEmail) {
+      const errorMessage = 'Admin or sender email is not set. Please configure ADMIN_EMAIL and BREVO_FROM_EMAIL in apphosting.yaml.';
+      console.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
 
     const apiInstance = new Brevo.TransactionalEmailsApi();
     const apiKey = apiInstance.authentications['apiKey'];
@@ -56,7 +61,7 @@ const sendEmailFlow = ai.defineFlow(
     try {
       // Send to User
       sendSmtpEmail.to = [{ email: userEmail, name: studentName }];
-      sendSmtpEmail.sender = { email: senderEmail, name: 'Al-Nadi Activities' };
+      sendSmtpEmail.sender = { email: senderEmail, name: senderName };
       sendSmtpEmail.subject = `Subscription Confirmation: ${itemTitle}`;
       sendSmtpEmail.htmlContent = `<html><body><h1>Hello ${studentName}!</h1><p>You have successfully subscribed to the ${itemType.toLowerCase()}: <strong>${itemTitle}</strong>.</p></body></html>`;
       sendSmtpEmail.textContent = `Hello ${studentName}! You have successfully subscribed to the ${itemType.toLowerCase()}: ${itemTitle}.`;
