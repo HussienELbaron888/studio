@@ -168,6 +168,7 @@ export const getStats = onCall(
     region: "us-central1",
     timeoutSeconds: 30,
     memory: "256MiB",
+    cors: true,
   },
   async () => {
     try {
