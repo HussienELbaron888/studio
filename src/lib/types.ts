@@ -46,3 +46,11 @@ export type Talent = {
   image_path?: string | null;
   created_at?: any;
 };
+
+export type Album = {
+  id: string;
+  title: { en: string; ar: string };
+  date: string; // YYYY-MM-DD
+  imageUrls: string[];
+  created_at?: any;
+};

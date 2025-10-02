@@ -1,45 +1,70 @@
+
 "use client";
 
-import Image from 'next/image';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { photoAlbums } from '@/lib/placeholder-data';
-import { useLanguage } from '@/context/language-context';
-import { Camera } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import Image from "next/image";
+import { useLanguage } from "@/context/language-context";
+import { Loader2 } from "lucide-react";
+import type { Album } from "@/lib/types";
 
 export default function GalleryPage() {
-  const { language, content } = useLanguage();
+  const [items, setItems] = useState<Album[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { content, language } = useLanguage();
+
+  useEffect(() => {
+    const run = async () => {
+      const q = query(collection(db, "albums"), orderBy("created_at", "desc"));
+      const snap = await getDocs(q);
+      const rows: Album[] = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...(d.data() as any) }));
+      setItems(rows);
+      setLoading(false);
+    };
+    run();
+  }, []);
 
   return (
     <div className="container mx-auto p-4 md:p-8 flex-grow">
-      <h1 className="mb-8 font-headline text-3xl font-bold md:text-4xl">
+       <h1 className="mb-8 font-headline text-3xl font-bold md:text-4xl">
         {content.navGallery}
       </h1>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {photoAlbums.map((album) => (
-          <Card key={album.id} className="group overflow-hidden">
-            <CardContent className="relative h-64 w-full p-0">
-              <Image
-                src={album.image.imageUrl}
-                alt={album.image.description}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint={album.image.imageHint}
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              />
-               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            </CardContent>
-            <CardFooter className="relative z-10 -mt-14 flex justify-between bg-card p-4">
-              <h3 className="font-headline text-md font-semibold">
-                {album.title[language]}
-              </h3>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Camera className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                <span>{album.count}</span>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      ) : !items.length ? (
+        <div className="p-6 text-center text-muted-foreground">لا توجد ألبومات حالياً</div>
+      ) : (
+        <div className="space-y-12">
+            {items.map((a) => (
+                <section key={a.id} className="rounded-2xl shadow-lg border bg-card p-4 sm:p-6">
+                <div className="flex items-center justify-between gap-4 flex-wrap border-b pb-4 mb-4">
+                    <h2 className="font-headline text-xl sm:text-2xl font-bold text-primary">
+                      {a.title?.[language as keyof typeof a.title] || a.title}
+                    </h2>
+                    {a.date && <div className="text-sm text-muted-foreground">{a.date}</div>}
+                </div>
+
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {a.imageUrls?.map((src, i) => (
+                    <div key={i} className="relative w-full aspect-square overflow-hidden rounded-xl group">
+                        <Image
+                          src={src}
+                          alt={`${a.title?.[language as keyof typeof a.title] || a.title} - ${i + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                    </div>
+                    ))}
+                </div>
+                </section>
+            ))}
+        </main>
+      )}
     </div>
   );
 }
