@@ -37,3 +37,12 @@ export type Event = {
   image_path?: string | null;
   created_at?: any;
 };
+
+export type Talent = {
+  id: string; // Firestore document ID
+  name: { en: string; ar: string };
+  stage: { en: string; ar: string };
+  details: { en: string; ar: string };
+  image_path?: string | null;
+  created_at?: any;
+};

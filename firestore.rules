@@ -1,58 +1,45 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
-
-    function isUser(uid) {
-      return request.auth.uid == uid;
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
     function isAdmin() {
       return request.auth.token.role == 'admin';
     }
 
-    // USERS:
-    // 1. Can read their own user document.
-    // 2. Admins can read any user document.
-    // 3. No one can write to user documents directly (managed server-side on creation).
+    // USERS collection
+    // Let users read their own data, but only admins create/update/delete.
     match /users/{userId} {
-      allow read: if isUser(userId) || isAdmin();
-      allow write: if false; // Should be managed server-side
+      allow read: if isSignedIn() && isOwner(userId) || isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
-    // ACTIVITIES, TRIPS, EVENTS:
-    // 1. Anyone can read.
-    // 2. Only admins can create, update, or delete.
-    match /activities/{activityId} {
+    // ACTIVITIES, TRIPS, EVENTS, TALENTS collections
+    // Allow anyone to read. Only admins can write.
+    match /{collection}/{docId} 
+    where collection in ['activities', 'trips', 'events', 'talents'] {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn() && isAdmin();
     }
-    match /trips/{tripId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-     match /events/{eventId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // SUBSCRIPTIONS:
-    // 1. Users can create a subscription for themselves.
-    // 2. Users can read/update/delete their own subscriptions.
-    // 3. Admins can read/write all subscriptions.
-    match /subscriptions/{subscriptionId} {
+    
+    // SUBSCRIPTIONS collection
+    // Let users create their own subscriptions.
+    // Let users read their own subscriptions.
+    // Admins can read all subscriptions.
+    // No one can update or delete subscriptions through client SDK for data integrity.
+    match /subscriptions/{subId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
-    }
-
-    // Fallback rule: Deny all other access
-    match /{document=**} {
-      allow read, write: if false;
+      allow read: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
+      allow update, delete: if false; 
     }
   }
 }
