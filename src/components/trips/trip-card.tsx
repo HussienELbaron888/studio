@@ -14,7 +14,7 @@ import type { Trip } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
+import { resolveStorageURL } from '@/utils/storage-url';
 import { TripSubscriptionForm } from './trip-subscription-form';
 
 
@@ -37,13 +37,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     
     const fetchUrl = async () => {
       try {
-        let url: string | null = null;
-        if (trip.image_path) {
-            url = await resolveStorageURL(trip.image_path);
-        } else if ((trip as any).image?.imageUrl) {
-            url = fixOldBucketUrl((trip as any).image.imageUrl);
-        }
-        
+        const url = await resolveStorageURL(trip.image_path);
         if (!cancel) {
           setResolvedUrl(url);
         }
@@ -59,7 +53,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     fetchUrl();
 
     return () => { cancel = true; };
-  }, [trip.image_path, (trip as any).image?.imageUrl]);
+  }, [trip.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -71,7 +65,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("tripId", "==", trip.id),
+      where("itemId", "==", trip.id), // Use itemId to check across types
       where("userId", "==", uid),
       limit(1)
     );

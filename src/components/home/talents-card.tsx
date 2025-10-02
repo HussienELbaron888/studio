@@ -28,33 +28,31 @@ export function TalentsCard() {
 
   useEffect(() => {
     const fetchLatestTalentImage = async () => {
+      setLoading(true);
       try {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
         
+        let url: string | null = null;
+        let alt = fallbackImage.description;
+        let hint = fallbackImage.imageHint;
+
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
           if (latestTalent.image_path) {
-            const url = await resolveStorageURL(latestTalent.image_path);
-            if (url) {
-              setImageUrl(url);
-              setImageAlt(latestTalent.name.en);
-              setImageHint('student portrait'); // Generic hint
-            } else {
-              setImageUrl(fallbackImage.imageUrl);
-              setImageAlt(fallbackImage.description);
-              setImageHint(fallbackImage.imageHint);
+            const resolved = await resolveStorageURL(latestTalent.image_path);
+            if (resolved) {
+                url = resolved;
+                alt = latestTalent.name.en;
+                hint = 'student portrait';
             }
-          } else {
-             setImageUrl(fallbackImage.imageUrl);
-             setImageAlt(fallbackImage.description);
-             setImageHint(fallbackImage.imageHint);
           }
-        } else {
-          setImageUrl(fallbackImage.imageUrl);
-          setImageAlt(fallbackImage.description);
-          setImageHint(fallbackImage.imageHint);
         }
+        
+        setImageUrl(url || fallbackImage.imageUrl);
+        setImageAlt(alt);
+        setImageHint(hint);
+
       } catch (error) {
         console.error("Error fetching latest talent:", error);
         // On error, use fallback
@@ -70,7 +68,7 @@ export function TalentsCard() {
   }, [fallbackImage]);
 
   return (
-    <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px]">
+    <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px] group">
       {loading ? (
         <Skeleton className="absolute inset-0" />
       ) : (
