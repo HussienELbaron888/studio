@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { sendConfirmationEmail } from "@/lib/email";
+import { getSubscriptionConfirmationHtml } from "@/lib/email-templates";
+
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -27,20 +29,8 @@ type SubscriptionFormProps = {
   tripId: string;
 }
 
-const emailHtmlTemplate = (studentName: string, itemTitle: string) => `
-  <div dir="rtl" style="font-family:Arial, sans-serif; line-height:1.6; text-align: right;">
-    <h3>تأكيد الاشتراك</h3>
-    <p>مرحباً ${studentName}،</p>
-    <p>لقد استلمنا طلب اشتراكك في رحلة: <strong>${itemTitle}</strong>.</p>
-    <p>سيتم التواصل معك قريباً لتأكيد التفاصيل وإتمام الإجراءات.</p>
-    <br>
-    <p>مع تحياتنا،</p>
-    <p><strong>فريق الرحلات في النادي</strong></p>
-  </div>
-`;
-
 export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: SubscriptionFormProps) {
-  const { content } = useLanguage();
+  const { content, language } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -78,7 +68,11 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       await addDoc(subscriptionsRef, payload);
 
       const subject = `تأكيد الاشتراك في رحلة: ${tripTitle}`;
-      const htmlContent = emailHtmlTemplate(values.studentName, tripTitle);
+      const htmlContent = getSubscriptionConfirmationHtml({
+        itemTitle: tripTitle,
+        itemType: language === 'ar' ? 'رحلة' : 'Trip',
+        subscriber: values,
+      });
 
       const emailResult = await sendConfirmationEmail(user.email, subject, htmlContent);
 

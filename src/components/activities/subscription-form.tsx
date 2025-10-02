@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { sendConfirmationEmail } from "@/lib/email";
+import { getSubscriptionConfirmationHtml } from "@/lib/email-templates";
 
 const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -26,18 +27,6 @@ type SubscriptionFormProps = {
   activityTitle: string;
   activityId: string;
 }
-
-const emailHtmlTemplate = (studentName: string, itemTitle: string) => `
-  <div dir="rtl" style="font-family:Arial, sans-serif; line-height:1.6; text-align: right;">
-    <h3>تأكيد الاشتراك</h3>
-    <p>مرحباً ${studentName}،</p>
-    <p>لقد استلمنا طلب اشتراكك في نشاط: <strong>${itemTitle}</strong>.</p>
-    <p>سيتم التواصل معك قريباً لتأكيد التفاصيل وإتمام الإجراءات.</p>
-    <br>
-    <p>مع تحياتنا،</p>
-    <p><strong>فريق الأنشطة في النادي</strong></p>
-  </div>
-`;
 
 export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: SubscriptionFormProps) {
   const { content, language } = useLanguage();
@@ -79,7 +68,11 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
       await addDoc(subscriptionsRef, payload);
 
       const subject = `تأكيد الاشتراك في نشاط: ${activityTitle}`;
-      const htmlContent = emailHtmlTemplate(values.studentName, activityTitle);
+      const htmlContent = getSubscriptionConfirmationHtml({
+        itemTitle: activityTitle,
+        itemType: language === 'ar' ? 'نشاط' : 'Activity',
+        subscriber: values,
+      });
       
       const emailResult = await sendConfirmationEmail(user.email, subject, htmlContent);
 
