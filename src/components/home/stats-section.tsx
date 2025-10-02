@@ -1,13 +1,14 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { useLanguage } from '@/context/language-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Star, Plane, Calendar, CreditCard, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 
 const getStats = httpsCallable(functions, 'getStats');
 

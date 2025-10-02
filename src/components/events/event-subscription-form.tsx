@@ -60,6 +60,7 @@ export function EventSubscriptionForm({ setDialogOpen, eventTitle, eventId }: Su
       const payload = {
         ...values,
         userId: user.uid,
+        userEmail: user.email,
         eventId: eventId,
         itemTitle: eventTitle,
         itemType: 'event',

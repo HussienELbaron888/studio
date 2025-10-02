@@ -1,5 +1,6 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
@@ -163,14 +164,14 @@ export const grantAdmin = onCall(
 );
 
 
-export const getStats = onCall(
+export const getStats = onRequest(
   {
     region: "us-central1",
     timeoutSeconds: 30,
     memory: "256MiB",
-    cors: true,
+    cors: true, 
   },
-  async () => {
+  async (req, res) => {
     try {
       const [
         subscriptionsSnap,
@@ -195,8 +196,8 @@ export const getStats = onCall(
           freeActivities++;
         }
       });
-
-      return {
+      
+      const stats = {
         subscriptions: subscriptionsSnap.data().count,
         paidActivities: paidActivities,
         freeActivities: freeActivities,
@@ -204,10 +205,13 @@ export const getStats = onCall(
         trips: tripsSnap.data().count,
         talents: talentsSnap.data().count,
       };
+      
+      res.status(200).json(stats);
+
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Failed to get stats:", msg);
-      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
+      res.status(500).json({ error: `Failed to get stats: ${msg}` });
     }
   }
 );

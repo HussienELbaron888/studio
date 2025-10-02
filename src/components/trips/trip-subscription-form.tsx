@@ -60,6 +60,7 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       const payload = {
         ...values,
         userId: user.uid,
+        userEmail: user.email,
         tripId: tripId,
         itemTitle: tripTitle,
         itemType: 'trip',

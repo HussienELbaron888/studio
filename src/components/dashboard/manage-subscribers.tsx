@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  collection, getDocs, orderBy, query, deleteDoc, doc,
+  collection, onSnapshot, orderBy, query, deleteDoc, doc,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, functions as fbFunctions } from "@/lib/firebase";
@@ -40,62 +40,40 @@ export function ManageSubscribers() {
   const [emailRecipients, setEmailRecipients] = useState<string[]>([]);
 
   useEffect(() => {
-    const run = async () => {
-      setLoading(true);
+    setLoading(true);
+    const q = query(collection(db, "subscriptions"), orderBy("subscribedAt", "desc"));
 
-      const load = async (col: string, itemType: Subscriber["itemType"]) => {
-        const snap = await getDocs(query(collection(db, col), orderBy("subscribedAt", "desc")));
-        return snap.docs.map(d => {
-          const data = d.data() as any;
-          return {
-            id: d.id,
-            path: `${col}/${d.id}`,
-            itemType,
-            itemTitle: data.itemTitle,
-            className: data.className,
-            studentName: data.studentName,
-            userEmail: data.userEmail || "", // Firestore rules might restrict this
-            userId: data.userId,
-            subscribedAt: data.subscribedAt?.toDate(),
-            phoneNumber: data.phoneNumber,
-          } as Subscriber;
-        });
-      };
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const subs = snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          path: d.ref.path,
+          itemType: data.itemType,
+          itemTitle: data.itemTitle,
+          className: data.className,
+          studentName: data.studentName,
+          userEmail: data.userEmail || "",
+          userId: data.userId,
+          subscribedAt: data.subscribedAt?.toDate(),
+          phoneNumber: data.phoneNumber,
+        } as Subscriber;
+      });
+      setRows(subs);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching subscribers:", error);
+      toast({ title: "Error", description: "Could not fetch subscribers.", variant: "destructive" });
+      setLoading(false);
+    });
 
-      try {
-        const [activities, trips, events] = await Promise.all([
-            load("subscriptions", "activity").catch(() => []), // Assuming all are in 'subscriptions' now
-            load("subscriptions", "trip").catch(() => []),
-            load("subscriptions", "event").catch(() => [])
-        ]);
-
-        const allSubs = [...activities, ...trips, ...events];
-        
-        // This is a client-side filter as we're fetching from the same collection
-        const combined = Array.from(new Map(allSubs.map(item => [item.id, item])).values());
-        
-        setRows(combined);
-
-      } catch (error) {
-        console.error("Error fetching subscribers:", error);
-        toast({ title: "Error", description: "Could not fetch subscribers.", variant: "destructive" });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    run();
+    return () => unsubscribe();
   }, [toast]);
 
   const filtered = useMemo(() => {
     let out = rows;
     if (typeFilter !== "all") {
-        out = out.filter(r => {
-            if (typeFilter === 'activity') return r.path.startsWith('subscriptions') && r.itemType === 'activity';
-            if (typeFilter === 'trip') return r.path.startsWith('subscriptions') && r.itemType === 'trip';
-            if (typeFilter === 'event') return r.path.startsWith('subscriptions') && r.itemType === 'event';
-            return false;
-        });
+        out = out.filter(r => r.itemType === typeFilter);
     }
 
     if (qText.trim()) {
@@ -107,10 +85,11 @@ export function ManageSubscribers() {
         (r.phoneNumber || "").toLowerCase().includes(ql)
       );
     }
-    return out.sort((a, b) => (b.subscribedAt?.getTime() || 0) - (a.subscribedAt?.getTime() || 0));
+    return out;
   }, [rows, typeFilter, qText]);
 
   const allChecked = useMemo(() => filtered.length > 0 && filtered.every(r => selected[r.id]), [filtered, selected]);
+  
   const toggleAll = (checked: boolean) => {
     const newSelected: Record<string, boolean> = {};
     if (checked) {
@@ -119,7 +98,7 @@ export function ManageSubscribers() {
     setSelected(newSelected);
   };
   
-  const selectedCount = useMemo(() => Object.values(selected).filter(Boolean).length, [selected]);
+  const selectedCount = useMemo(() => Object.keys(selected).filter(id => selected[id]).length, [selected]);
 
   async function deleteOne(path: string) {
     if (!confirm("Are you sure you want to delete this subscription?")) return;
@@ -306,4 +285,3 @@ export function ManageSubscribers() {
     </>
   );
 }
-

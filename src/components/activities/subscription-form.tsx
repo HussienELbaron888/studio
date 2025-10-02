@@ -59,6 +59,7 @@ export function SubscriptionForm({ setDialogOpen, activityTitle, activityId }: S
       const payload = {
         ...values,
         userId: user.uid,
+        userEmail: user.email,
         activityId: activityId,
         itemTitle: activityTitle,
         itemType: 'activity',
