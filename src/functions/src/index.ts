@@ -162,65 +162,71 @@ export const grantAdmin = onCall(
   }
 );
 
-
 const allowedOrigins = [
-    "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
-    "http://localhost:9002", // for local dev
+  "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
+  "https://6000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
+  "http://localhost:9002",
 ];
 
 export const getStats = onRequest({ region: "us-central1" }, async (req, res) => {
-    const origin = req.headers.origin;
-    if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader("Access-Control-Allow-Origin", origin);
-    }
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-    if (req.method === "OPTIONS") {
-        res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        res.status(204).send("");
-        return;
-    }
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
 
-    try {
-        const [
-            subscriptionsSnap,
-            activitiesSnap,
-            eventsSnap,
-            tripsSnap,
-            talentsSnap,
-        ] = await Promise.all([
-            db.collection("subscriptions").count().get(),
-            db.collection("activities").get(),
-            db.collection("events").count().get(),
-            db.collection("trips").count().get(),
-            db.collection("talents").count().get(),
-        ]);
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method Not Allowed" });
+    return;
+  }
 
-        let paidActivities = 0;
-        let freeActivities = 0;
-        activitiesSnap.forEach((doc) => {
-            if (doc.data().type === "Paid") {
-                paidActivities++;
-            } else {
-                freeActivities++;
-            }
-        });
+  try {
+    const [
+      subscriptionsSnap,
+      activitiesSnap,
+      eventsSnap,
+      tripsSnap,
+      talentsSnap,
+    ] = await Promise.all([
+      db.collection("subscriptions").count().get(),
+      db.collection("activities").get(),
+      db.collection("events").count().get(),
+      db.collection("trips").count().get(),
+      db.collection("talents").count().get(),
+    ]);
 
-        const stats = {
-            subscriptions: subscriptionsSnap.data().count,
-            paidActivities: paidActivities,
-            freeActivities: freeActivities,
-            events: eventsSnap.data().count,
-            trips: tripsSnap.data().count,
-            talents: talentsSnap.data().count,
-        };
+    let paidActivities = 0;
+    let freeActivities = 0;
+    activitiesSnap.forEach((doc) => {
+      if (doc.data().type === "Paid") {
+        paidActivities++;
+      } else {
+        freeActivities++;
+      }
+    });
 
-        res.status(200).json({ ok: true, data: stats });
-    } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error);
-        console.error("Failed to get stats:", msg);
-        res.status(500).json({ ok: false, error: `Failed to get stats: ${msg}` });
-    }
+    const stats = {
+      subscriptions: subscriptionsSnap.data().count,
+      paidActivities,
+      freeActivities,
+      events: eventsSnap.data().count,
+      trips: tripsSnap.data().count,
+      talents: talentsSnap.data().count,
+    };
+
+    res.status(200).json({ ok: true, data: stats });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Failed to get stats:", msg);
+    res.status(500).json({ ok: false, error: `Failed to get stats: ${msg}` });
+  }
 });
 
 
@@ -292,4 +298,3 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("internal", msg);
     }
   });
-
