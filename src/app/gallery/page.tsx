@@ -63,7 +63,7 @@ export default function GalleryPage() {
                 </div>
                 </section>
             ))}
-        </main>
+        </div>
       )}
     </div>
   );
