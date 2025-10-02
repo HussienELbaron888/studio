@@ -29,7 +29,7 @@ export function fixOldBucketUrl(url?: string | null) {
   // This function might no longer be necessary if all URLs are resolved via getDownloadURL,
   // but it's kept for legacy data.
   return url.replace(
-    "/b/studio-3721710978-c50cb.appspot.com/",
-    "/b/studio-3721710978-c50cb.firebasestorage.app/"
+    "gs://studio-3721710978-c50cb.appspot.com",
+    "https://firebasestorage.googleapis.com/v0/b/studio-3721710978-c50cb.appspot.com/o"
   );
 }

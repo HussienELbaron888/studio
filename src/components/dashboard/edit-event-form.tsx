@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { Event } from "@/lib/types";
 import { EventValues, updateEvent } from "@/utils/updateEvent";
 import { resolveStorageURL } from "@/utils/storage-url";
+import { useLanguage } from "@/context/language-context";
 
 
 type EditEventFormProps = {
@@ -22,6 +23,7 @@ type EditEventFormProps = {
 
 export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
   const { toast } = useToast();
+  const { content } = useLanguage();
 
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
@@ -130,7 +132,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto p-1 pr-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="title-ar-edit">عنوان الفعالية (العربية)</Label>
+          <Label htmlFor="title-ar-edit">{content.eventTitleLabel} (العربية)</Label>
           <Input id="title-ar-edit" value={titleAr} onChange={e => setTitleAr(e.target.value)} required />
         </div>
         <div className="space-y-2">
@@ -139,7 +141,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description-ar-edit">الوصف (العربية)</Label>
+        <Label htmlFor="description-ar-edit">{content.eventDescriptionLabel} (العربية)</Label>
         <Textarea id="description-ar-edit" value={descriptionAr} onChange={e => setDescriptionAr(e.target.value)} />
       </div>
       <div className="space-y-2">
@@ -148,7 +150,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
       </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="location-ar-edit">المكان (العربية)</Label>
+          <Label htmlFor="location-ar-edit">{content.eventLocationLabel} (العربية)</Label>
           <Input id="location-ar-edit" value={locationAr} onChange={e => setLocationAr(e.target.value)} required />
         </div>
         <div className="space-y-2">
@@ -157,7 +159,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
         </div>
       </div>
       <div className="space-y-2">
-          <Label htmlFor="price-edit">السعر (بالريال)</Label>
+          <Label htmlFor="price-edit">{content.priceLabel}</Label>
           <Input id="price-edit" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
       </div>
 

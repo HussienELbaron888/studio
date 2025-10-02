@@ -11,6 +11,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { Album } from "@/lib/types";
 import { updateAlbum } from "@/utils/update-album";
+import { useLanguage } from "@/context/language-context";
 
 type EditAlbumFormProps = {
   album: Album;

@@ -75,7 +75,7 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("activityId", "==", activity.id),
+      where("itemId", "==", activity.id),
       where("userId", "==", uid),
       limit(1)
     );

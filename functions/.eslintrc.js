@@ -33,7 +33,7 @@ module.exports = {
       "code": 120,
       "ignoreStrings": true,
       "ignoreTemplateLiterals": true,
-      "ignoreComments": true
+      "ignoreComments": true,
     }],
   },
 };

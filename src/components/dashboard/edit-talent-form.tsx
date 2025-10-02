@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { Talent } from "@/lib/types";
 import { TalentValues, updateTalent } from "@/utils/updateTalent";
 import { resolveStorageURL } from "@/utils/storage-url";
+import { useLanguage } from "@/context/language-context";
 
 type EditTalentFormProps = {
   talent: Talent;

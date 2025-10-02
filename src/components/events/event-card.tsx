@@ -65,7 +65,7 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("eventId", "==", event.id),
+      where("itemId", "==", event.id),
       where("userId", "==", uid),
       limit(1)
     );

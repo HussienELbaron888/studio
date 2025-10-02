@@ -69,9 +69,13 @@ export function HeroSlider() {
       const urls: Record<string, string> = {};
       for (const slide of slides) {
         if (slide.image_path) {
-          const url = await resolveStorageURL(slide.image_path);
-          if (url) {
-            urls[slide.id] = url;
+          try {
+            const url = await resolveStorageURL(slide.image_path);
+            if (url) {
+              urls[slide.id] = url;
+            }
+          } catch(e) {
+             console.error(`Failed to resolve image URL for slide ${slide.id}:`, e);
           }
         }
       }

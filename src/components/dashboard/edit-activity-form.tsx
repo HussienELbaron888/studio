@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Activity } from "@/lib/types";
 import { ActivityValues, updateImageAndSaveActivity } from "@/utils/updateActivity";
 import { resolveStorageURL } from "@/utils/storage-url";
+import { useLanguage } from "@/context/language-context";
 
 
 type EditActivityFormProps = {
@@ -23,6 +24,7 @@ type EditActivityFormProps = {
 
 export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormProps) {
   const { toast } = useToast();
+  const { content } = useLanguage();
 
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
@@ -191,7 +193,7 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       </div>
       {type === 'Paid' && (
         <div className="space-y-2">
-          <Label htmlFor="price-edit">السعر (بالريال)</Label>
+          <Label htmlFor="price-edit">{content.priceLabel}</Label>
           <Input id="price-edit" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
         </div>
       )}

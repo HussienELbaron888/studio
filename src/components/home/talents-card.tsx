@@ -11,7 +11,6 @@ import type { Talent } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/context/language-context';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,11 +19,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function TalentsCard() {
   const { content, language } = useLanguage();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageHint, setImageHint] = useState<string>('');
   const [imageAlt, setImageAlt] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  const fallbackImage = PlaceHolderImages.find((img) => img.id === 'talents-bg')!;
+  const fallbackImageUrl = "https://images.unsplash.com/photo-1575426158836-0be172e108ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzdGFnZSUyMHNwb3RsaWdodHxlbnwwfHx8fDE3NTkxNDY5ODd8MA&ixlib=rb-4.1.0&q=80&w=1080";
+  const fallbackImageAlt = "A spotlight shining on a stage";
 
   useEffect(() => {
     const fetchLatestTalentImage = async () => {
@@ -34,8 +33,7 @@ export function TalentsCard() {
         const snapshot = await getDocs(talentsQuery);
         
         let url: string | null = null;
-        let alt = fallbackImage.description;
-        let hint = fallbackImage.imageHint;
+        let alt = fallbackImageAlt;
 
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
@@ -44,28 +42,25 @@ export function TalentsCard() {
             if (resolved) {
                 url = resolved;
                 alt = latestTalent.name.en;
-                hint = 'student portrait';
             }
           }
         }
         
-        setImageUrl(url || fallbackImage.imageUrl);
+        setImageUrl(url || fallbackImageUrl);
         setImageAlt(alt);
-        setImageHint(hint);
 
       } catch (error) {
         console.error("Error fetching latest talent:", error);
         // On error, use fallback
-        setImageUrl(fallbackImage.imageUrl);
-        setImageAlt(fallbackImage.description);
-        setImageHint(fallbackImage.imageHint);
+        setImageUrl(fallbackImageUrl);
+        setImageAlt(fallbackImageAlt);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLatestTalentImage();
-  }, [fallbackImage]);
+  }, []);
 
   return (
     <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px] group">
@@ -78,7 +73,6 @@ export function TalentsCard() {
                 alt={imageAlt}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                data-ai-hint={imageHint}
                 sizes="(max-width: 768px) 100vw, 50vw"
             />
         )

@@ -6,7 +6,7 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Image from "next/image";
 import { useLanguage } from "@/context/language-context";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImageIcon } from "lucide-react";
 import type { Album } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,7 +51,7 @@ export default function GalleryPage() {
                                 {album.imageUrls && album.imageUrls.length > 0 ? (
                                     <Image
                                         src={album.imageUrls[0]}
-                                        alt={album.title?.[language as keyof typeof album.title] || album.title}
+                                        alt={album.title?.[language as keyof typeof album.title] || ''}
                                         fill
                                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                         className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -64,14 +64,14 @@ export default function GalleryPage() {
                              </div>
                            </CardHeader>
                            <CardContent className="p-4">
-                                <CardTitle className="text-lg truncate">{album.title?.[language as keyof typeof album.title] || album.title}</CardTitle>
+                                <CardTitle className="text-lg truncate">{album.title?.[language as keyof typeof album.title] || ''}</CardTitle>
                                 <p className="text-sm text-muted-foreground mt-1">{album.date}</p>
                            </CardContent>
                         </Card>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl w-full p-0" aria-describedby={`album-dialog-${album.id}`}>
                         <DialogHeader className="p-4 border-b">
-                            <DialogTitle>{album.title?.[language as keyof typeof album.title] || album.title}</DialogTitle>
+                            <DialogTitle>{album.title?.[language as keyof typeof album.title] || ''}</DialogTitle>
                             <p id={`album-dialog-${album.id}`} className="sr-only">Image viewer for album {album.title.en}</p>
                         </DialogHeader>
                         <div className="p-4 md:p-6">
