@@ -16,6 +16,7 @@ import { ManageTrips } from '@/components/dashboard/manage-trips';
 import { ManageEvents } from '@/components/dashboard/manage-events';
 import { ManageTalents } from '@/components/dashboard/manage-talents';
 import { ManageGallery } from '@/components/dashboard/manage-gallery';
+import { ManageSlider } from '@/components/dashboard/manage-slider';
 import { Loader2 } from 'lucide-react';
 import { getAuth } from "firebase/auth";
 
@@ -60,7 +61,7 @@ export default function DashboardPage() {
     { value: 'events', label: content.manageEvents, component: <ManageEvents /> },
     { value: 'talents', label: content.manageTalents, component: <ManageTalents /> },
     { value: 'gallery', label: content.manageGallery, component: <ManageGallery /> },
-    { value: 'slider', label: content.manageSlider, component: <p className="p-4 text-muted-foreground">Manage Slider content here.</p> },
+    { value: 'slider', label: content.manageSlider, component: <ManageSlider /> },
   ];
 
   return (
