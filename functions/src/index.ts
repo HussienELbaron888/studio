@@ -1,11 +1,20 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
+import {initializeApp, getApps} from "firebase-admin/app";
+import {getAuth as getAdminAuth} from "firebase-admin/auth";
+
+// Initialize admin SDK if not already initialized
+if (!getApps().length) {
+  initializeApp();
+}
 
 const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
 const BREVO_FROM_NAME = defineSecret("BREVO_FROM_NAME");
 const ADMIN_EMAIL = defineSecret("ADMIN_EMAIL");
 const ADMIN_EMAILS = defineSecret("ADMIN_EMAILS"); // اختياري: قائمة أدمنز
+const ADMIN_GRANT_KEY = defineSecret("ADMIN_GRANT_KEY");
+
 
 export const sendConfirmationEmail = onCall(
   {
@@ -75,7 +84,7 @@ export const sendConfirmationEmail = onCall(
         subject,
         htmlContent: html,
       };
-      if (cc) payload.cc = cc; // بدلاً من {..., cc}
+      if (cc) payload.cc = cc;
       if (replyTo) payload.replyTo = replyTo;
 
       const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -103,6 +112,28 @@ export const sendConfirmationEmail = onCall(
       const msg = e instanceof Error ? e.message : String(e);
       console.error("Send email failed:", msg);
       throw new HttpsError("internal", msg);
+    }
+  }
+);
+
+
+export const grantAdmin = onCall(
+  {secrets: [ADMIN_GRANT_KEY], region: "us-central1", timeoutSeconds: 15},
+  async (req) => {
+    const {email, key} = (req.data || {}) as { email?: string; key?: string };
+    if (!email || !key) {
+      throw new HttpsError("invalid-argument", "email and key required");
+    }
+    if (key !== ADMIN_GRANT_KEY.value()) {
+      throw new HttpsError("permission-denied", "invalid key");
+    }
+    try {
+      const user = await getAdminAuth().getUserByEmail(email);
+      await getAdminAuth().setCustomUserClaims(user.uid, {role: "admin"});
+      return {ok: true, uid: user.uid};
+    } catch (error: any) {
+      console.error("Failed to grant admin role:", error);
+      throw new HttpsError("not-found", `User not found or an error occurred: ${error.message}`);
     }
   }
 );
