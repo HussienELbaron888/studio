@@ -21,6 +21,7 @@ const formSchema = z.object({
   studentName: z.string().min(2, { message: "Name must be at least 2 characters." }),
   className: z.string().min(1, { message: "Class is required." }),
   phoneNumber: z.string().min(5, { message: "A valid phone number is required." }),
+  userEmail: z.string().email({ message: "Invalid email address." }),
 });
 
 type SubscriptionFormProps = {
@@ -40,13 +41,14 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       studentName: "",
       className: "",
       phoneNumber: "",
+      userEmail: user?.email || "",
     },
   });
 
   const { formState: { isSubmitting } } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !user.uid || !user.email) {
+    if (!user || !user.uid) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to subscribe.",
@@ -60,7 +62,6 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       const payload = {
         ...values,
         userId: user.uid,
-        userEmail: user.email,
         tripId: tripId,
         itemId: tripId,
         itemTitle: tripTitle,
@@ -73,10 +74,14 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
       const htmlContent = getSubscriptionConfirmationHtml({
         itemTitle: tripTitle,
         itemType: language === 'ar' ? 'رحلة' : 'Trip',
-        subscriber: values,
+        subscriber: {
+          studentName: values.studentName,
+          className: values.className,
+          phoneNumber: values.phoneNumber,
+        },
       });
 
-      const emailResult = await sendConfirmationEmail(user.email, subject, htmlContent);
+      const emailResult = await sendConfirmationEmail(values.userEmail, subject, htmlContent);
 
        if (emailResult.success) {
         toast({
@@ -139,6 +144,19 @@ export function TripSubscriptionForm({ setDialogOpen, tripTitle, tripId }: Subsc
               <FormLabel>{content.phoneLabel}</FormLabel>
               <FormControl>
                 <Input placeholder={content.phoneLabel} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="userEmail"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{content.emailLabel}</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="email@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
