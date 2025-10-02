@@ -60,7 +60,7 @@ export function StatsSection() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const result: any = await getStats();
+        const result: any = await getStats({});
         if (result.data.ok) {
            setStatsData(result.data.data);
         } else {

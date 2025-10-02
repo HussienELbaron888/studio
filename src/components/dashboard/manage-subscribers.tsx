@@ -8,7 +8,6 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions as fbFunctions } from "@/lib/firebase";
 import type { Subscriber } from "@/lib/types";
-import { useLanguage } from "@/context/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

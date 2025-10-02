@@ -1,11 +1,9 @@
 
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import corsLib from "cors";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {defineSecret} from "firebase-functions/params";
+import {initializeApp, getApps} from "firebase-admin/app";
+import {getAuth as getAdminAuth} from "firebase-admin/auth";
+import {getFirestore} from "firebase-admin/firestore";
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
@@ -13,8 +11,6 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-
-const cors = corsLib({ origin: true });
 
 const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
@@ -46,7 +42,7 @@ export const sendConfirmationEmail = onCall(
       );
     }
 
-    const { to, subject, html } = req.data || {};
+    const {to, subject, html} = req.data || {};
     if (!to || !subject || !html) {
       throw new HttpsError(
         "invalid-argument",
@@ -78,17 +74,17 @@ export const sendConfirmationEmail = onCall(
     const adminList = split.filter((e) => emailRx.test(e));
 
     const cc = adminList.length ?
-      adminList.map((e) => ({ email: e })) :
+      adminList.map((e) => ({email: e})) :
       undefined;
 
     const replyTo = adminList.length ?
-      { email: adminList[0], name: fromName } :
+      {email: adminList[0], name: fromName} :
       undefined;
 
     try {
       const payload: Record<string, unknown> = {
-        sender: { email: fromEmail, name: fromName },
-        to: [{ email: to }],
+        sender: {email: fromEmail, name: fromName},
+        to: [{email: to}],
         subject,
         htmlContent: html,
       };
@@ -115,7 +111,7 @@ export const sendConfirmationEmail = onCall(
       }
 
       console.log("Brevo OK:", text);
-      return { ok: true };
+      return {ok: true};
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("Send email failed:", msg);
@@ -155,8 +151,8 @@ export const grantAdmin = onCall(
     try {
       const adminAuth = getAdminAuth();
       const user = await adminAuth.getUserByEmail(email);
-      await adminAuth.setCustomUserClaims(user.uid, { role: "admin" });
-      return { ok: true, uid: user.uid };
+      await adminAuth.setCustomUserClaims(user.uid, {role: "admin"});
+      return {ok: true, uid: user.uid};
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Failed to grant admin role:", msg);
@@ -167,57 +163,53 @@ export const grantAdmin = onCall(
 );
 
 
-export const getStats = onRequest(
+export const getStats = onCall(
   {
     region: "us-central1",
     timeoutSeconds: 30,
     memory: "256MiB",
-    secrets: [BREVO_API_KEY], // Keep secrets if needed, though unused in logic
   },
-  async (req, res) => {
-    cors(req, res, async () => {
-      try {
-        const [
-          subscriptionsSnap,
-          activitiesSnap,
-          eventsSnap,
-          tripsSnap,
-          talentsSnap,
-        ] = await Promise.all([
-          db.collection("subscriptions").count().get(),
-          db.collection("activities").get(),
-          db.collection("events").count().get(),
-          db.collection("trips").count().get(),
-          db.collection("talents").count().get(),
-        ]);
+  async () => {
+    try {
+      const [
+        subscriptionsSnap,
+        activitiesSnap,
+        eventsSnap,
+        tripsSnap,
+        talentsSnap,
+      ] = await Promise.all([
+        db.collection("subscriptions").count().get(),
+        db.collection("activities").get(),
+        db.collection("events").count().get(),
+        db.collection("trips").count().get(),
+        db.collection("talents").count().get(),
+      ]);
 
-        let paidActivities = 0;
-        let freeActivities = 0;
-        activitiesSnap.forEach((doc) => {
-          if (doc.data().type === "Paid") {
-            paidActivities++;
-          } else {
-            freeActivities++;
-          }
-        });
-        
-        const stats = {
-          subscriptions: subscriptionsSnap.data().count,
-          paidActivities: paidActivities,
-          freeActivities: freeActivities,
-          events: eventsSnap.data().count,
-          trips: tripsSnap.data().count,
-          talents: talentsSnap.data().count,
-        };
-        
-        res.status(200).json(stats);
+      let paidActivities = 0;
+      let freeActivities = 0;
+      activitiesSnap.forEach((doc) => {
+        if (doc.data().type === "Paid") {
+          paidActivities++;
+        } else {
+          freeActivities++;
+        }
+      });
 
-      } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error);
-        console.error("Failed to get stats:", msg);
-        res.status(500).json({ error: `Failed to get stats: ${msg}` });
-      }
-    });
+      const stats = {
+        subscriptions: subscriptionsSnap.data().count,
+        paidActivities: paidActivities,
+        freeActivities: freeActivities,
+        events: eventsSnap.data().count,
+        trips: tripsSnap.data().count,
+        talents: talentsSnap.data().count,
+      };
+
+      return {ok: true, data: stats};
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to get stats:", msg);
+      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
+    }
   }
 );
 
@@ -240,7 +232,7 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
     }
 
-    const { to, subject, html, text } = req.data || {};
+    const {to, subject, html, text} = req.data || {};
 
     if (!Array.isArray(to) || to.length === 0) {
       throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
@@ -257,10 +249,10 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("failed-precondition", "Brevo environment variables are missing.");
     }
 
-    const recipients = [...new Set(to as string[])].map((email: string) => ({ email }));
+    const recipients = [...new Set(to as string[])].map((email: string) => ({email}));
 
     const payload = {
-      sender: { email: fromEmail, name: fromName },
+      sender: {email: fromEmail, name: fromName},
       to: recipients,
       subject,
       htmlContent: html || undefined,
@@ -283,7 +275,7 @@ export const sendAdminEmail = onCall(
         console.error(`Brevo error: ${res.status}`, msg);
         throw new HttpsError("internal", `Brevo API error: ${res.status} ${msg}`);
       }
-      return { ok: true };
+      return {ok: true};
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Failed to send admin email:", msg);
