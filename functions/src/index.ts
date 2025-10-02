@@ -146,8 +146,9 @@ export const grantAdmin = onCall(
     }
 
     try {
-      const user = await getAdminAuth().getUserByEmail(email);
-      await getAdminAuth().setCustomUserClaims(user.uid, {role: "admin"});
+      const adminAuth = getAdminAuth();
+      const user = await adminAuth.getUserByEmail(email);
+      await adminAuth.setCustomUserClaims(user.uid, {role: "admin"});
       return {ok: true, uid: user.uid};
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
