@@ -1,5 +1,5 @@
 
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
@@ -163,55 +163,66 @@ export const grantAdmin = onCall(
 );
 
 
-export const getStats = onCall(
-  {
-    region: "us-central1",
-    timeoutSeconds: 30,
-    memory: "256MiB",
-  },
-  async () => {
-    try {
-      const [
-        subscriptionsSnap,
-        activitiesSnap,
-        eventsSnap,
-        tripsSnap,
-        talentsSnap,
-      ] = await Promise.all([
-        db.collection("subscriptions").count().get(),
-        db.collection("activities").get(),
-        db.collection("events").count().get(),
-        db.collection("trips").count().get(),
-        db.collection("talents").count().get(),
-      ]);
+const allowedOrigins = [
+    "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
+    "http://localhost:9002", // for local dev
+];
 
-      let paidActivities = 0;
-      let freeActivities = 0;
-      activitiesSnap.forEach((doc) => {
-        if (doc.data().type === "Paid") {
-          paidActivities++;
-        } else {
-          freeActivities++;
-        }
-      });
-
-      const stats = {
-        subscriptions: subscriptionsSnap.data().count,
-        paidActivities: paidActivities,
-        freeActivities: freeActivities,
-        events: eventsSnap.data().count,
-        trips: tripsSnap.data().count,
-        talents: talentsSnap.data().count,
-      };
-
-      return {ok: true, data: stats};
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error("Failed to get stats:", msg);
-      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
+export const getStats = onRequest({ region: "us-central1" }, async (req, res) => {
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
     }
-  }
-);
+
+    if (req.method === "OPTIONS") {
+        res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.status(204).send("");
+        return;
+    }
+
+    try {
+        const [
+            subscriptionsSnap,
+            activitiesSnap,
+            eventsSnap,
+            tripsSnap,
+            talentsSnap,
+        ] = await Promise.all([
+            db.collection("subscriptions").count().get(),
+            db.collection("activities").get(),
+            db.collection("events").count().get(),
+            db.collection("trips").count().get(),
+            db.collection("talents").count().get(),
+        ]);
+
+        let paidActivities = 0;
+        let freeActivities = 0;
+        activitiesSnap.forEach((doc) => {
+            if (doc.data().type === "Paid") {
+                paidActivities++;
+            } else {
+                freeActivities++;
+            }
+        });
+
+        const stats = {
+            subscriptions: subscriptionsSnap.data().count,
+            paidActivities: paidActivities,
+            freeActivities: freeActivities,
+            events: eventsSnap.data().count,
+            trips: tripsSnap.data().count,
+            talents: talentsSnap.data().count,
+        };
+
+        res.status(200).json({ ok: true, data: stats });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error("Failed to get stats:", msg);
+        res.status(500).json({ ok: false, error: `Failed to get stats: ${msg}` });
+    }
+});
+
 
 export const sendAdminEmail = onCall(
   {
@@ -282,4 +293,3 @@ export const sendAdminEmail = onCall(
     }
   });
 
-    
