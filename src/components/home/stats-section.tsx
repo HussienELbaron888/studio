@@ -11,7 +11,7 @@ import { functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
 
-const getStats = httpsCallable(functions, 'getStats');
+const getStatsFn = httpsCallable(functions, 'getStats');
 
 const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.ElementType, label: string, value: number, color: string, isLoading: boolean }) => {
   const bgColor = `bg-${color}-100`;
@@ -60,7 +60,7 @@ export function StatsSection() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const result: any = await getStats({});
+        const result: any = await getStatsFn({});
         if (result.data.ok) {
            setStatsData(result.data.data);
         } else {
@@ -129,3 +129,5 @@ export function StatsSection() {
     </section>
   );
 }
+
+    

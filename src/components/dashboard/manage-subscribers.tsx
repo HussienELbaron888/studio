@@ -6,7 +6,7 @@ import {
   collection, onSnapshot, orderBy, query, deleteDoc, doc,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { db, functions as fbFunctions } from "@/lib/firebase";
+import { db, functions } from "@/lib/firebase";
 import type { Subscriber } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Loader2, Mail, Trash2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 
-const sendAdminEmail = httpsCallable(fbFunctions, "sendAdminEmail");
+const sendAdminEmailFn = httpsCallable(functions, "sendAdminEmail");
 
 export function ManageSubscribers() {
   const { toast } = useToast();
@@ -134,16 +134,17 @@ export function ManageSubscribers() {
   }
 
   const handleOpenEmailDialog = (recipients: string[]) => {
-    if (recipients.length === 0) {
+    const uniqueRecipients = [...new Set(recipients.filter(Boolean))];
+    if (uniqueRecipients.length === 0) {
         toast({ title: "No recipients", description: "No users selected or they don't have emails.", variant: "destructive" });
         return;
     }
-    setEmailRecipients([...new Set(recipients)]);
+    setEmailRecipients(uniqueRecipients);
     setEmailOpen(true);
   }
   
   const handleBulkEmail = () => {
-     const emails = filtered.filter(r => selected[r.id]).map(r => r.userEmail).filter(Boolean);
+     const emails = filtered.filter(r => selected[r.id]).map(r => r.userEmail);
      handleOpenEmailDialog(emails);
   }
 
@@ -154,7 +155,7 @@ export function ManageSubscribers() {
     }
     setIsSending(true);
     try {
-      await sendAdminEmail({ to: emailRecipients, subject: emailSubject, html: emailBody });
+      await sendAdminEmailFn({ to: emailRecipients, subject: emailSubject, html: emailBody });
       toast({ title: "Success", description: "Email sent successfully." });
       setEmailOpen(false);
       setEmailSubject("");
@@ -244,7 +245,7 @@ export function ManageSubscribers() {
                     <TableCell>{r.userEmail}</TableCell>
                     <TableCell>{r.subscribedAt?.toLocaleDateString() ?? "-"}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenEmailDialog([r.userEmail].filter(Boolean))} disabled={!r.userEmail}>
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEmailDialog([r.userEmail])} disabled={!r.userEmail}>
                         <Mail className="h-4 w-4"/>
                       </Button>
                        <Button variant="ghost" size="icon" onClick={() => deleteOne(r.path)} className="text-destructive hover:text-destructive">
@@ -284,3 +285,5 @@ export function ManageSubscribers() {
     </>
   );
 }
+
+    

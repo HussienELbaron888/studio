@@ -232,13 +232,13 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
     }
 
-    const {to, subject, html, text} = req.data || {};
+    const {to, subject, html} = req.data || {};
 
     if (!Array.isArray(to) || to.length === 0) {
       throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
     }
-    if (!subject || (!html && !text)) {
-      throw new HttpsError("invalid-argument", "Subject and (html or text) are required.");
+    if (!subject || !html) {
+      throw new HttpsError("invalid-argument", "Subject and html are required.");
     }
 
     const apiKey = BREVO_API_KEY.value();
@@ -255,8 +255,7 @@ export const sendAdminEmail = onCall(
       sender: {email: fromEmail, name: fromName},
       to: recipients,
       subject,
-      htmlContent: html || undefined,
-      textContent: text || undefined,
+      htmlContent: html,
     };
 
     try {
@@ -282,3 +281,5 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("internal", msg);
     }
   });
+
+    
