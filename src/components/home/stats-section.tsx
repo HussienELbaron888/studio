@@ -8,9 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Star, Plane, Calendar, CreditCard, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
-
 
 const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.ElementType, label: string, value: number, color: string, isLoading: boolean }) => {
   const bgColor = `bg-${color}-100`;
@@ -49,7 +46,10 @@ const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.
   );
 };
 
-const getStatsFn = httpsCallable(functions, 'getStats');
+// The URL for the getStats Cloud Function.
+// Replace with your actual Cloud Function URL if it's different.
+const GET_STATS_URL = "https://us-central1-studio-3721710978-c50cb.cloudfunctions.net/getStats";
+
 
 export function StatsSection() {
   const { content } = useLanguage();
@@ -60,13 +60,30 @@ export function StatsSection() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const result = await getStatsFn();
-        const responseData = result.data as { ok: boolean, data?: any, error?: string };
+        const response = await fetch(GET_STATS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // body: JSON.stringify({}), // No body needed for this function
+        });
+        
+        const responseText = await response.text();
+        if (!response.ok) {
+           let errorMessage = `Request failed with status ${response.status}`;
+           try {
+              const errorJson = JSON.parse(responseText);
+              errorMessage = errorJson.message || errorMessage;
+           } catch(e) {
+             // Not a JSON response
+           }
+           throw new Error(errorMessage);
+        }
 
-        if (responseData.ok && responseData.data) {
-           setStatsData(responseData.data);
+        const result = JSON.parse(responseText);
+
+        if (result.ok && result.data) {
+           setStatsData(result.data);
         } else {
-            throw new Error(responseData.error || "Failed to fetch stats");
+            throw new Error(result.error || "Failed to fetch stats");
         }
       } catch (error: any) {
         console.error("Error fetching stats:", error);
