@@ -14,11 +14,11 @@ export async function resolveStorageURL(imagePath?: string | null) {
     // Firebase throws an error if the file doesn't exist.
     // We can safely ignore this and return null.
     if (error.code === 'storage/object-not-found') {
-      console.warn(`Image not found at path: ${imagePath}`);
+      // console.warn(`Image not found at path: ${imagePath}`);
       return null;
     }
     // For other errors, we might want to log them.
-    console.error("Error getting download URL:", error);
+    console.error(`Error getting download URL for ${imagePath}:`, error.message);
     return null;
   }
 }

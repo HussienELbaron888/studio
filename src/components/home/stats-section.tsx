@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Star, Plane, Calendar, CreditCard, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
 
 const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.ElementType, label: string, value: number, color: string, isLoading: boolean }) => {
@@ -47,6 +49,7 @@ const StatCard = ({ icon: Icon, label, value, color, isLoading }: { icon: React.
   );
 };
 
+const getStatsFn = httpsCallable(functions, 'getStats');
 
 export function StatsSection() {
   const { content } = useLanguage();
@@ -57,23 +60,13 @@ export function StatsSection() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch("https://us-central1-studio-3721710978-c50cb.cloudfunctions.net/getStats", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            const errorMessage = errorData.error || `Request failed with status ${response.status}`;
-            throw new Error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
-        }
+        const result = await getStatsFn();
+        const responseData = result.data as { ok: boolean, data?: any, error?: string };
 
-        const result = await response.json();
-
-        if (result.ok) {
-           setStatsData(result.data);
+        if (responseData.ok && responseData.data) {
+           setStatsData(responseData.data);
         } else {
-            throw new Error(result.error || "Failed to fetch stats");
+            throw new Error(responseData.error || "Failed to fetch stats");
         }
       } catch (error: any) {
         console.error("Error fetching stats:", error);

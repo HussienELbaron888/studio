@@ -1,5 +1,5 @@
 
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
@@ -162,73 +162,56 @@ export const grantAdmin = onCall(
   }
 );
 
-const allowedOrigins = [
-  "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
-  "https://6000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
-  "http://localhost:9002",
-];
 
-export const getStats = onRequest({ region: "us-central1" }, async (req, res) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+export const getStats = onCall(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async () => {
+    try {
+      const [
+        subscriptionsSnap,
+        activitiesSnap,
+        eventsSnap,
+        tripsSnap,
+        talentsSnap,
+      ] = await Promise.all([
+        db.collection("subscriptions").count().get(),
+        db.collection("activities").get(),
+        db.collection("events").count().get(),
+        db.collection("trips").count().get(),
+        db.collection("talents").count().get(),
+      ]);
+
+      let paidActivities = 0;
+      let freeActivities = 0;
+      activitiesSnap.forEach((doc) => {
+        if (doc.data().type === "Paid") {
+          paidActivities++;
+        } else {
+          freeActivities++;
+        }
+      });
+
+      const stats = {
+        subscriptions: subscriptionsSnap.data().count,
+        paidActivities: paidActivities,
+        freeActivities: freeActivities,
+        events: eventsSnap.data().count,
+        trips: tripsSnap.data().count,
+        talents: talentsSnap.data().count,
+      };
+
+      return {ok: true, data: stats};
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to get stats:", msg);
+      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
+    }
   }
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    res.status(204).send("");
-    return;
-  }
-
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method Not Allowed" });
-    return;
-  }
-
-  try {
-    const [
-      subscriptionsSnap,
-      activitiesSnap,
-      eventsSnap,
-      tripsSnap,
-      talentsSnap,
-    ] = await Promise.all([
-      db.collection("subscriptions").count().get(),
-      db.collection("activities").get(),
-      db.collection("events").count().get(),
-      db.collection("trips").count().get(),
-      db.collection("talents").count().get(),
-    ]);
-
-    let paidActivities = 0;
-    let freeActivities = 0;
-    activitiesSnap.forEach((doc) => {
-      if (doc.data().type === "Paid") {
-        paidActivities++;
-      } else {
-        freeActivities++;
-      }
-    });
-
-    const stats = {
-      subscriptions: subscriptionsSnap.data().count,
-      paidActivities,
-      freeActivities,
-      events: eventsSnap.data().count,
-      trips: tripsSnap.data().count,
-      talents: talentsSnap.data().count,
-    };
-
-    res.status(200).json({ ok: true, data: stats });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error("Failed to get stats:", msg);
-    res.status(500).json({ ok: false, error: `Failed to get stats: ${msg}` });
-  }
-});
-
+);
 
 export const sendAdminEmail = onCall(
   {
@@ -249,13 +232,13 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
     }
 
-    const {to, subject, html} = req.data || {};
+    const {to, subject, html, text} = req.data || {};
 
     if (!Array.isArray(to) || to.length === 0) {
       throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
     }
-    if (!subject || !html) {
-      throw new HttpsError("invalid-argument", "Subject and html are required.");
+    if (!subject || (!html && !text)) {
+      throw new HttpsError("invalid-argument", "Subject and (html or text) are required.");
     }
 
     const apiKey = BREVO_API_KEY.value();
@@ -272,7 +255,8 @@ export const sendAdminEmail = onCall(
       sender: {email: fromEmail, name: fromName},
       to: recipients,
       subject,
-      htmlContent: html,
+      htmlContent: html || undefined,
+      textContent: text || undefined,
     };
 
     try {
