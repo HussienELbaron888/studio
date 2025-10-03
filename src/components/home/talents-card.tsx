@@ -32,22 +32,22 @@ export function TalentsCard() {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
         
-        let url: string | null = null;
-        let alt = fallbackImageAlt;
+        let finalUrl: string | null = null;
+        let finalAlt = fallbackImageAlt;
 
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
           if (latestTalent.image_path) {
             const resolved = await resolveStorageURL(latestTalent.image_path);
             if (resolved) {
-                url = resolved;
-                alt = latestTalent.name.en;
+                finalUrl = resolved;
+                finalAlt = latestTalent.name.en;
             }
           }
         }
         
-        setImageUrl(url || fallbackImageUrl);
-        setImageAlt(alt);
+        setImageUrl(finalUrl || fallbackImageUrl);
+        setImageAlt(finalAlt);
 
       } catch (error) {
         console.error("Error fetching latest talent:", error);

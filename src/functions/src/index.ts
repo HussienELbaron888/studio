@@ -1,11 +1,9 @@
 
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
 import {getFirestore} from "firebase-admin/firestore";
-import * as logger from "firebase-functions/logger";
-
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
@@ -165,28 +163,14 @@ export const grantAdmin = onCall(
 );
 
 
-const allowedOrigins = new Set([
-  "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
-  "https://6000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
-  "http://localhost:9002",
-  "http://localhost:5173",
-]);
-
-export const getStats = onRequest({ region: "us-central1" }, async (req, res) => {
-  const origin = req.headers.origin as string | undefined;
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    res.status(204).send("");
-    return;
-  }
-
-  try {
+export const getStats = onCall(
+  {
+    region: "us-central1",
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async () => {
+    try {
       const [
         subscriptionsSnap,
         activitiesSnap,
@@ -220,13 +204,14 @@ export const getStats = onRequest({ region: "us-central1" }, async (req, res) =>
         talents: talentsSnap.data().count,
       };
 
-      res.status(200).json({ ok: true, data: stats });
-    } catch (error: any) {
-      logger.error("getStats failed:", error);
-      res.status(500).json({ error: "internal", message: error.message });
+      return {ok: true, data: stats};
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("Failed to get stats:", msg);
+      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
     }
-});
-
+  }
+);
 
 export const sendAdminEmail = onCall(
   {
@@ -297,4 +282,3 @@ export const sendAdminEmail = onCall(
       throw new HttpsError("internal", msg);
     }
   });
-
