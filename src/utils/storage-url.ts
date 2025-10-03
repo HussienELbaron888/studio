@@ -3,26 +3,6 @@
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 
-/** يرجّع URL صالح للعرض من مسار Storage مثل "activities/.../cover.jpg" */
-export async function resolveStorageURL(imagePath?: string | null) {
-  if (!imagePath) return null;
-  try {
-    // Always use getDownloadURL to get a publicly accessible URL
-    const imageRef = ref(storage, imagePath);
-    return await getDownloadURL(imageRef);
-  } catch (error: any) {
-    // Firebase throws an error if the file doesn't exist.
-    // We can safely ignore this and return null.
-    if (error.code === 'storage/object-not-found') {
-      // console.warn(`Image not found at path: ${imagePath}`);
-      return null;
-    }
-    // For other errors, we might want to log them.
-    console.error(`Error getting download URL for ${imagePath}:`, error.message);
-    return null;
-  }
-}
-
 /** لو عندك URL قديم مخزّن ببكت appspot، بنصلّحه مؤقتًا */
 export function fixOldBucketUrl(url?: string | null) {
   if (!url) return null;
@@ -32,4 +12,24 @@ export function fixOldBucketUrl(url?: string | null) {
     "gs://studio-3721710978-c50cb.appspot.com",
     "https://firebasestorage.googleapis.com/v0/b/studio-3721710978-c50cb.appspot.com/o"
   );
+}
+
+/** يرجّع URL صالح للعرض من مسار Storage مثل "activities/.../cover.jpg" */
+export async function resolveStorageURL(imagePath?: string | null) {
+  if (!imagePath) return null;
+
+  // If it's a full gs:// path, extract the path part.
+  const path = imagePath.startsWith('gs://') ? imagePath.split('/').slice(3).join('/') : imagePath;
+
+  try {
+    const imageRef = ref(storage, path);
+    return await getDownloadURL(imageRef);
+  } catch (error: any) {
+    if (error.code === 'storage/object-not-found') {
+      console.warn(`Image not found at path: ${path}`);
+      return null;
+    }
+    console.error(`Error getting download URL for ${path}:`, error.message);
+    return null;
+  }
 }
