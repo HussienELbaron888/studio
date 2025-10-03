@@ -18,7 +18,4 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const functions = getFunctions(app, 'us-central1');
 
-// 👈 أجبر الـ SDK على نفس البكت في كل مكان
-export const storage = getStorage(app, `gs://${firebaseConfig.storageBucket}`);
-
-    
+export const storage = getStorage(app);
