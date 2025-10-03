@@ -64,7 +64,8 @@ export function StatsSection() {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || `Request failed with status ${response.status}`);
+            const errorMessage = errorData.error || `Request failed with status ${response.status}`;
+            throw new Error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
         }
 
         const result = await response.json();
