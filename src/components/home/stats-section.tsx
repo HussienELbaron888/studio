@@ -64,6 +64,7 @@ export function StatsSection() {
         const resultData = result.data as any;
 
         if (resultData.ok && resultData.data) {
+           console.log("getStats ok:", resultData.data);
            setStatsData(resultData.data);
         } else {
             throw new Error(resultData.error || "Failed to fetch stats");
