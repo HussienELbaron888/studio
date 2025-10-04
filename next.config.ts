@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+       {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'placehold.co',
@@ -27,12 +32,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https' ,
         hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
       },

@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/types';
 import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
-import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
+import { CalendarDays, Clock, Repeat, DollarSign, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
 
@@ -30,11 +30,11 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-   useEffect(() => {
+  useEffect(() => {
     let alive = true;
-    setIsImageLoading(true);
+    setIsLoading(true);
 
     const fetchUrl = async () => {
         try {
@@ -43,13 +43,11 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
                 setResolvedUrl(url);
             }
         } catch (e: any) {
-            console.debug("Image resolve failed:", activity.image_path, e?.code || e?.message);
-            if (alive) {
-                setResolvedUrl(null);
-            }
+             if (alive) setResolvedUrl(null);
+             console.debug("Image resolve failed:", activity.image_path, e?.code || e?.message);
         } finally {
             if (alive) {
-                setIsImageLoading(false);
+                setIsLoading(false);
             }
         }
     };
@@ -95,19 +93,19 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isImageLoading ? (
+          {isLoading ? (
             <Skeleton className="h-full w-full" />
           ) : resolvedUrl ? (
             <Image
               src={resolvedUrl}
-              alt={activity.image?.description || activity.title.en}
+              alt={activity.title.en}
               fill
               className="object-cover"
               sizes={imageSizes}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">No Image</span>
+              <ImageIcon className="h-12 w-12 text-muted-foreground" />
             </div>
           )}
           <Badge

@@ -30,13 +30,13 @@ export function TalentsCard() {
     setLoading(true);
     
     const fetchLatestTalentImage = async () => {
+      let finalUrl: string | null = null;
+      let finalAlt = fallbackImageAlt;
+
       try {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
         
-        let finalUrl: string | null = null;
-        let finalAlt = fallbackImageAlt;
-
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
           if (latestTalent.image_path) {

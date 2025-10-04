@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import type { Talent } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
-import { User, Award, Info } from 'lucide-react';
+import { User, Award, Info, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
 
@@ -19,11 +19,11 @@ type TalentCardProps = {
 export function TalentCard({ talent, imageSizes }: TalentCardProps) {
   const { language } = useLanguage();
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    setIsImageLoading(true);
+    setIsLoading(true);
     
     const fetchUrl = async () => {
       try {
@@ -32,13 +32,11 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
           setResolvedUrl(url);
         }
       } catch (e: any) {
+        if (alive) setResolvedUrl(null);
         console.debug("img resolve failed:", talent.image_path, e?.code || e?.message);
-        if (alive) {
-          setResolvedUrl(null);
-        }
       } finally {
         if (alive) {
-          setIsImageLoading(false);
+          setIsLoading(false);
         }
       }
     };
@@ -56,7 +54,7 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isImageLoading ? (
+          {isLoading ? (
             <Skeleton className="h-full w-full" />
           ) : resolvedUrl ? (
             <Image
@@ -68,7 +66,7 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <User className="h-16 w-16 text-muted-foreground" />
+              <ImageIcon className="h-16 w-16 text-muted-foreground" />
             </div>
           )}
         </div>

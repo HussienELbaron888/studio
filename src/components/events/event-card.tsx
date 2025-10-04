@@ -12,7 +12,7 @@ import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Event } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
-import { MapPin, DollarSign } from 'lucide-react';
+import { MapPin, DollarSign, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
 import { EventSubscriptionForm } from './event-subscription-form';
@@ -29,11 +29,11 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    setIsImageLoading(true);
+    setIsLoading(true);
     
     const fetchUrl = async () => {
       try {
@@ -42,13 +42,11 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
           setResolvedUrl(url);
         }
       } catch (e: any) {
+        if (alive) setResolvedUrl(null);
         console.debug("img resolve failed:", event.image_path, e?.code || e?.message);
-        if (alive) {
-          setResolvedUrl(null);
-        }
       } finally {
         if (alive) {
-          setIsImageLoading(false);
+          setIsLoading(false);
         }
       }
     };
@@ -93,7 +91,7 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isImageLoading ? (
+          {isLoading ? (
             <Skeleton className="h-full w-full" />
           ) : resolvedUrl ? (
             <Image
@@ -105,7 +103,7 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">No Image</span>
+              <ImageIcon className="h-12 w-12 text-muted-foreground" />
             </div>
           )}
         </div>

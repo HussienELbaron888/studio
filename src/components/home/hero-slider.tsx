@@ -39,7 +39,7 @@ function HeroSliderSkeleton() {
 
 
 export function HeroSlider() {
-  const { language, content } = useLanguage();
+  const { language } = useLanguage();
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
