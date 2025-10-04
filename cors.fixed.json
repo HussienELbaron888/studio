@@ -1,8 +1,13 @@
-
 [
   {
-    "origin": ["*"],
-    "method": ["GET", "HEAD", "OPTIONS"],
+    "origin": [
+      "*"
+    ],
+    "method": [
+      "GET",
+      "HEAD",
+      "OPTIONS"
+    ],
     "responseHeader": [
       "Content-Type",
       "Authorization",
