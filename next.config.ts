@@ -3,6 +3,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  reactStrictMode: false, // Temporarily disabled to reduce console noise in dev
   typescript: {
     ignoreBuildErrors: true,
   },
