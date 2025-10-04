@@ -41,8 +41,8 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
         if (alive) {
           setResolvedUrl(url);
         }
-      } catch (e) {
-        console.error("img resolve failed:", e);
+      } catch (e: any) {
+        console.debug("img resolve failed:", event.image_path, e?.code || e?.message);
         if (alive) {
           setResolvedUrl(null);
         }

@@ -50,11 +50,13 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
       setLocationEn(event.location?.en || "");
       setPrice(event.price || "");
       
-      resolveStorageURL(event.image_path)
-        .then(url => {
-          if (alive && url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      if (event.image_path) {
+        resolveStorageURL(event.image_path)
+          .then(url => {
+            if (alive && url) setPreviewUrl(url);
+          })
+          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+      }
     }
     return () => { alive = false; }
   }, [event]);

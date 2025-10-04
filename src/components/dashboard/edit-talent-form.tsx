@@ -47,11 +47,13 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
       setDetailsAr(talent.details.ar);
       setDetailsEn(talent.details.en);
       
-      resolveStorageURL(talent.image_path)
-        .then(url => {
-          if (alive && url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      if (talent.image_path) {
+        resolveStorageURL(talent.image_path)
+          .then(url => {
+            if (alive && url) setPreviewUrl(url);
+          })
+          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+      }
     }
     return () => { alive = false; }
   }, [talent]);

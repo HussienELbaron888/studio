@@ -48,11 +48,13 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       setScheduleEn(trip.schedule.en);
       setPrice(trip.price || "");
       
-      resolveStorageURL(trip.image_path)
-        .then(url => {
-          if (alive && url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      if (trip.image_path) {
+        resolveStorageURL(trip.image_path)
+          .then(url => {
+            if (alive && url) setPreviewUrl(url);
+          })
+          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+      }
     }
     return () => { alive = false; };
   }, [trip]);

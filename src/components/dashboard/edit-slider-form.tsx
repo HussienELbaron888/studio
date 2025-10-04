@@ -51,9 +51,11 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
         setButtonHref(slide.buttonHref);
         setOrder(slide.order);
         setPublished(slide.published);
-        resolveStorageURL(slide.image_path).then(url => {
-            if (alive && url) setPreviewUrl(url);
-        }).catch(console.error);
+        if (slide.image_path) {
+          resolveStorageURL(slide.image_path).then(url => {
+              if (alive && url) setPreviewUrl(url);
+          }).catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+        }
     }
     return () => { alive = false; }
   }, [slide]);

@@ -42,8 +42,8 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
             if (alive) {
                 setResolvedUrl(url);
             }
-        } catch (e) {
-            console.error("Image resolve failed:", e);
+        } catch (e: any) {
+            console.debug("Image resolve failed:", activity.image_path, e?.code || e?.message);
             if (alive) {
                 setResolvedUrl(null);
             }
@@ -103,7 +103,6 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
               alt={activity.image?.description || activity.title.en}
               fill
               className="object-cover"
-              data-ai-hint={activity.image?.imageHint}
               sizes={imageSizes}
             />
           ) : (

@@ -74,8 +74,8 @@ export function HeroSlider() {
             if (url) {
               urls[slide.id] = url;
             }
-          } catch(e) {
-             console.error(`Failed to resolve image URL for slide ${slide.id}:`, e);
+          } catch(e: any) {
+             console.debug(`Failed to resolve image URL for slide ${slide.id}:`, e?.code || e?.message);
           }
         }
       }

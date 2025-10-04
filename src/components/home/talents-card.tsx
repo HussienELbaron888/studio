@@ -53,8 +53,8 @@ export function TalentsCard() {
           setImageAlt(finalAlt);
         }
 
-      } catch (error) {
-        console.error("Error fetching latest talent:", error);
+      } catch (error: any) {
+        console.debug("Error fetching latest talent:", error?.code || error?.message);
         if (alive) {
           // On error, use fallback
           setImageUrl(fallbackImageUrl);

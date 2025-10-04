@@ -31,8 +31,8 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
         if (alive) {
           setResolvedUrl(url);
         }
-      } catch (e) {
-        console.error("img resolve failed:", e);
+      } catch (e: any) {
+        console.debug("img resolve failed:", talent.image_path, e?.code || e?.message);
         if (alive) {
           setResolvedUrl(null);
         }

@@ -57,11 +57,13 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       setPrice(activity.price || "");
       setType(activity.type || "Free");
       
-      resolveStorageURL(activity.image_path)
-        .then(url => {
-          if (alive && url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      if (activity.image_path) {
+        resolveStorageURL(activity.image_path)
+          .then(url => {
+            if (alive && url) setPreviewUrl(url);
+          })
+          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+      }
     }
     return () => { alive = false; };
   }, [activity]);
