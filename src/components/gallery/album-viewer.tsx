@@ -27,7 +27,7 @@ export function AlbumViewer({ imageUrls }: AlbumViewerProps) {
       <Carousel
         opts={{
           align: 'start',
-          loop: true,
+          loop: imageUrls.length > 1,
           direction: language === 'ar' ? 'rtl' : 'ltr',
         }}
         className="w-full"
@@ -47,8 +47,12 @@ export function AlbumViewer({ imageUrls }: AlbumViewerProps) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
-        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
+       {imageUrls.length > 1 && (
+         <>
+            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
+            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
+         </>
+       )}
       </Carousel>
     </div>
   );
