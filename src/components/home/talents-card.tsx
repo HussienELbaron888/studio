@@ -26,8 +26,10 @@ export function TalentsCard() {
   const fallbackImageAlt = "A spotlight shining on a stage";
 
   useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    
     const fetchLatestTalentImage = async () => {
-      setLoading(true);
       try {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
@@ -46,20 +48,28 @@ export function TalentsCard() {
           }
         }
         
-        setImageUrl(finalUrl || fallbackImageUrl);
-        setImageAlt(finalAlt);
+        if (alive) {
+          setImageUrl(finalUrl || fallbackImageUrl);
+          setImageAlt(finalAlt);
+        }
 
       } catch (error) {
         console.error("Error fetching latest talent:", error);
-        // On error, use fallback
-        setImageUrl(fallbackImageUrl);
-        setImageAlt(fallbackImageAlt);
+        if (alive) {
+          // On error, use fallback
+          setImageUrl(fallbackImageUrl);
+          setImageAlt(fallbackImageAlt);
+        }
       } finally {
-        setLoading(false);
+        if (alive) {
+          setLoading(false);
+        }
       }
     };
 
     fetchLatestTalentImage();
+
+    return () => { alive = false; }
   }, []);
 
   return (

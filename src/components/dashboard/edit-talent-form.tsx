@@ -38,6 +38,7 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let alive = true;
     if (talent) {
       setNameAr(talent.name.ar);
       setNameEn(talent.name.en);
@@ -48,10 +49,11 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
       
       resolveStorageURL(talent.image_path)
         .then(url => {
-          if (url) setPreviewUrl(url);
+          if (alive && url) setPreviewUrl(url);
         })
         .catch(console.error);
     }
+    return () => { alive = false; }
   }, [talent]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {

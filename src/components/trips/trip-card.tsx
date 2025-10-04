@@ -32,19 +32,22 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
-    let cancel = false;
+    let alive = true;
     setIsImageLoading(true);
     
     const fetchUrl = async () => {
       try {
         const url = await resolveStorageURL(trip.image_path);
-        if (!cancel) {
+        if (alive) {
           setResolvedUrl(url);
         }
       } catch (e) {
         console.error("img resolve failed:", e);
+        if (alive) {
+          setResolvedUrl(null);
+        }
       } finally {
-        if (!cancel) {
+        if (alive) {
           setIsImageLoading(false);
         }
       }
@@ -52,7 +55,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     
     fetchUrl();
 
-    return () => { cancel = true; };
+    return () => { alive = false; };
   }, [trip.image_path]);
 
   useEffect(() => {

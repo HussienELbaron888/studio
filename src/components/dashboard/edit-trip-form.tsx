@@ -38,6 +38,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let alive = true;
     if (trip) {
       setTitleAr(trip.title.ar);
       setTitleEn(trip.title.en);
@@ -49,10 +50,11 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       
       resolveStorageURL(trip.image_path)
         .then(url => {
-          if (url) setPreviewUrl(url);
+          if (alive && url) setPreviewUrl(url);
         })
         .catch(console.error);
     }
+    return () => { alive = false; };
   }, [trip]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {

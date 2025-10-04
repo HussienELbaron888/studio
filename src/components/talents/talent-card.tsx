@@ -22,19 +22,22 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
-    let cancel = false;
+    let alive = true;
     setIsImageLoading(true);
     
     const fetchUrl = async () => {
       try {
         const url = await resolveStorageURL(talent.image_path);
-        if (!cancel) {
+        if (alive) {
           setResolvedUrl(url);
         }
       } catch (e) {
         console.error("img resolve failed:", e);
+        if (alive) {
+          setResolvedUrl(null);
+        }
       } finally {
-        if (!cancel) {
+        if (alive) {
           setIsImageLoading(false);
         }
       }
@@ -42,7 +45,7 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
     
     fetchUrl();
 
-    return () => { cancel = true; };
+    return () => { alive = false; };
   }, [talent.image_path]);
 
   const name = talent.name[language as keyof typeof talent.name];

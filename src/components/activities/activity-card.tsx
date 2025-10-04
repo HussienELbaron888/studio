@@ -16,7 +16,7 @@ import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
+import { resolveStorageURL } from '@/utils/storage-url';
 
 
 type ActivityCardProps = {
@@ -33,28 +33,22 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
    useEffect(() => {
-    let cancel = false;
+    let alive = true;
     setIsImageLoading(true);
 
     const fetchUrl = async () => {
         try {
-            let url: string | null = null;
-            if (activity.image_path) {
-                url = await resolveStorageURL(activity.image_path);
-            } else if (activity.image?.imageUrl) {
-                url = fixOldBucketUrl(activity.image.imageUrl);
-            }
-            
-            if (!cancel) {
+            const url = await resolveStorageURL(activity.image_path);
+            if (alive) {
                 setResolvedUrl(url);
             }
         } catch (e) {
             console.error("Image resolve failed:", e);
-            if (!cancel) {
+            if (alive) {
                 setResolvedUrl(null);
             }
         } finally {
-            if (!cancel) {
+            if (alive) {
                 setIsImageLoading(false);
             }
         }
@@ -62,8 +56,8 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     
     fetchUrl();
 
-    return () => { cancel = true; };
-  }, [activity.image_path, activity.image?.imageUrl]);
+    return () => { alive = false; };
+  }, [activity.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;

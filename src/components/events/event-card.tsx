@@ -32,19 +32,22 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
-    let cancel = false;
+    let alive = true;
     setIsImageLoading(true);
     
     const fetchUrl = async () => {
       try {
         const url = await resolveStorageURL(event.image_path);
-        if (!cancel) {
+        if (alive) {
           setResolvedUrl(url);
         }
       } catch (e) {
         console.error("img resolve failed:", e);
+        if (alive) {
+          setResolvedUrl(null);
+        }
       } finally {
-        if (!cancel) {
+        if (alive) {
           setIsImageLoading(false);
         }
       }
@@ -52,7 +55,7 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     
     fetchUrl();
 
-    return () => { cancel = true; };
+    return () => { alive = false; };
   }, [event.image_path]);
 
   useEffect(() => {

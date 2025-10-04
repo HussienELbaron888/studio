@@ -40,6 +40,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let alive = true;
     if (event) {
       setTitleAr(event.title.ar);
       setTitleEn(event.title.en);
@@ -51,10 +52,11 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
       
       resolveStorageURL(event.image_path)
         .then(url => {
-          if (url) setPreviewUrl(url);
+          if (alive && url) setPreviewUrl(url);
         })
         .catch(console.error);
     }
+    return () => { alive = false; }
   }, [event]);
 
 

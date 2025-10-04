@@ -40,6 +40,7 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let alive = true;
     if (slide) {
         setTitleAr(slide.title.ar);
         setTitleEn(slide.title.en);
@@ -51,9 +52,10 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
         setOrder(slide.order);
         setPublished(slide.published);
         resolveStorageURL(slide.image_path).then(url => {
-            if (url) setPreviewUrl(url);
+            if (alive && url) setPreviewUrl(url);
         }).catch(console.error);
     }
+    return () => { alive = false; }
   }, [slide]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
