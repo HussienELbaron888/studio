@@ -1,33 +1,41 @@
-
 // src/utils/storage-url.ts
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 
-/** يرجّع URL صالح للعرض من مسار Storage مثل "activities/.../cover.jpg" */
-export async function resolveStorageURL(imagePath?: string | null) {
-  if (!imagePath) return null;
+/**
+ * Resolves a Firebase Storage path (e.g., "activities/.../cover.jpg") to a publicly accessible URL.
+ * Handles potential errors like object-not-found gracefully.
+ */
+export async function resolveStorageURL(imagePath?: string | null): Promise<string | null> {
+  if (!imagePath) {
+    return null;
+  }
+
+  // Handle both full gs:// paths and direct paths
+  const path = imagePath.startsWith('gs://')
+    ? imagePath.substring(imagePath.indexOf('/', 5) + 1)
+    : imagePath;
+
+  if (!path) {
+    return null;
+  }
+
   try {
-    // Always use getDownloadURL to get a publicly accessible URL
-    const imageRef = ref(storage, imagePath);
+    const imageRef = ref(storage, path);
     return await getDownloadURL(imageRef);
   } catch (error: any) {
-    // Firebase throws an error if the file doesn't exist.
-    // We can safely ignore this and return null.
     if (error.code === 'storage/object-not-found') {
-      // console.warn(`Image not found at path: ${imagePath}`);
-      return null;
+      console.warn(`Image not found at path: ${path}`);
+    } else {
+      console.error(`Error getting download URL for ${path}:`, error);
     }
-    // For other errors, we might want to log them.
-    console.error(`Error getting download URL for ${imagePath}:`, error.message);
     return null;
   }
 }
 
-/** لو عندك URL قديم مخزّن ببكت appspot، بنصلّحه مؤقتًا */
+/** Legacy function to fix old bucket URL formats. May no longer be needed if resolveStorageURL is used consistently. */
 export function fixOldBucketUrl(url?: string | null) {
   if (!url) return null;
-  // This function might no longer be necessary if all URLs are resolved via getDownloadURL,
-  // but it's kept for legacy data.
   return url.replace(
     "gs://studio-3721710978-c50cb.appspot.com",
     "https://firebasestorage.googleapis.com/v0/b/studio-3721710978-c50cb.appspot.com/o"
