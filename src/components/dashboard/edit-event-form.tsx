@@ -38,6 +38,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (event) {
       setTitleAr(event.title.ar);
       setTitleEn(event.title.en);
@@ -47,11 +48,15 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
       setLocationEn(event.location?.en || "");
       setPrice(event.price || "");
       
-      const url = resolveStorageURL(event.image_path);
-      if (url) {
-        setPreviewUrl(url);
+      if(event.image_path) {
+        resolveStorageURL(event.image_path).then(url => {
+          if(isMounted && url) {
+            setPreviewUrl(url);
+          }
+        });
       }
     }
+    return () => { isMounted = false; };
   }, [event]);
 
 

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { collection, query, where, onSnapshot, limit } from "firebase/firestore";
 import { db } from '@/lib/firebase';
@@ -23,15 +23,28 @@ type ActivityCardProps = {
   imageSizes: string;
 };
 
+const FALLBACK_IMAGE_URL = 'https://picsum.photos/seed/placeholder/400/300';
+
 export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const { language, content } = useLanguage();
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   
-  const resolvedUrl = resolveStorageURL(activity.image_path);
+  useEffect(() => {
+    let isMounted = true;
+    if (activity.image_path) {
+      resolveStorageURL(activity.image_path).then(url => {
+        if (isMounted && url) {
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { isMounted = false; };
+  }, [activity.image_path]);
 
-  useState(() => {
+  useEffect(() => {
     const uid = user?.uid;
     if (!uid) {
       setIsSubscribed(false);
@@ -55,32 +68,28 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     });
 
     return () => unsubscribe();
-  });
+  }, [user?.uid, activity.id]);
 
   const schedule = activity.schedule?.[language as keyof typeof activity.schedule];
   const time = activity.time;
   const sessions = activity.sessions;
   const price = activity.price;
   const description = activity.description?.[language as keyof typeof activity.description];
+  
+  const finalImageUrl = imageUrl || FALLBACK_IMAGE_URL;
 
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
-            <Image
-              src={resolvedUrl}
-              alt={activity.image?.description || activity.title.en}
-              fill
-              className="object-cover"
-              sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
-            />
-          ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">No Image</span>
-            </div>
-          )}
+          <Image
+            src={finalImageUrl}
+            alt={activity.image?.description || activity.title.en}
+            fill
+            className="object-cover"
+            sizes={imageSizes}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE_URL; }}
+          />
           <Badge
             className={`absolute top-3 ${
               language === 'ar' ? 'left-3' : 'right-3'

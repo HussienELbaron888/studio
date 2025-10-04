@@ -19,65 +19,55 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function TalentsCard() {
   const { content, language } = useLanguage();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageHint, setImageHint] = useState<string>('');
-  const [imageAlt, setImageAlt] = useState<string>('');
+  const [talent, setTalent] = useState<Talent | null>(null);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fallbackImage = PlaceHolderImages.find((img) => img.id === 'talents-bg')!;
 
   useEffect(() => {
-    const fetchLatestTalentImage = async () => {
+    const fetchLatestTalent = async () => {
+      setLoading(true);
       try {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
         
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
-          const url = resolveStorageURL(latestTalent.image_path);
-          if (url) {
-            setImageUrl(url);
-            setImageAlt(latestTalent.name.en);
-            setImageHint('student portrait'); // Generic hint
-          } else {
-            setImageUrl(fallbackImage.imageUrl);
-            setImageAlt(fallbackImage.description);
-            setImageHint(fallbackImage.imageHint);
+          setTalent(latestTalent);
+          if (latestTalent.image_path) {
+            const url = await resolveStorageURL(latestTalent.image_path);
+            setResolvedImageUrl(url);
           }
-        } else {
-          setImageUrl(fallbackImage.imageUrl);
-          setImageAlt(fallbackImage.description);
-          setImageHint(fallbackImage.imageHint);
         }
       } catch (error) {
         console.debug("Error fetching latest talent, using fallback.", error);
-        setImageUrl(fallbackImage.imageUrl);
-        setImageAlt(fallbackImage.description);
-        setImageHint(fallbackImage.imageHint);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLatestTalentImage();
-  }, [fallbackImage]);
+    fetchLatestTalent();
+  }, []);
+
+  const finalImageUrl = resolvedImageUrl || fallbackImage.imageUrl;
+  const imageAlt = talent?.name.en || fallbackImage.description;
+  const imageHint = talent ? 'student portrait' : fallbackImage.imageHint;
 
   return (
     <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px]">
       {loading ? (
         <Skeleton className="absolute inset-0" />
       ) : (
-        imageUrl && (
-            <Image
-                src={imageUrl}
-                alt={imageAlt}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                data-ai-hint={imageHint}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImage.imageUrl; }}
-            />
-        )
+        <Image
+            src={finalImageUrl}
+            alt={imageAlt}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            data-ai-hint={imageHint}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImage.imageUrl; }}
+        />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       <CardContent className="relative z-10 p-6 text-white">

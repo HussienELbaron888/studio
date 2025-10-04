@@ -41,6 +41,7 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (activity) {
       setTitleAr(activity.title.ar);
       setTitleEn(activity.title.en);
@@ -53,11 +54,15 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       setPrice(activity.price || "");
       setType(activity.type || "Free");
       
-      const url = resolveStorageURL(activity.image_path);
-      if (url) {
-        setPreviewUrl(url);
+      if(activity.image_path) {
+        resolveStorageURL(activity.image_path).then(url => {
+          if (isMounted && url) {
+            setPreviewUrl(url);
+          }
+        });
       }
     }
+    return () => { isMounted = false; };
   }, [activity]);
 
 
@@ -65,6 +70,7 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      // Create a temporary URL for the new image preview
       setPreviewUrl(URL.createObjectURL(file));
     }
   };

@@ -1,38 +1,38 @@
 
 "use client";
 
-const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
-const TOKEN = process.env.NEXT_PUBLIC_FB_DL_TOKEN || "";
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 
 /**
- * يبني رابط تحميل مباشر للصورة من Storage باستخدام توكن ثابت.
- * @param path - المسار داخل البكت (e.g., "trips/ID/cover_123.jpg")
- * @returns رابط URL قابل للعرض مباشرة.
+ * Asynchronously resolves a storage path to a downloadable URL.
+ * It now uses getDownloadURL, which is the recommended Firebase approach.
+ * This function is safe to call from client components.
+ * 
+ * @param path The relative path to the file in Firebase Storage (e.g., "activities/ID/cover.jpg").
+ * @returns A promise that resolves to the downloadable URL, or null if the path is invalid or an error occurs.
  */
-export function resolveStorageURL(path: string | null | undefined): string | null {
-  if (!path) return null;
-
-  // نتأكد من أن المسار لا يبدأ بسلاش
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-  const objectPath = encodeURIComponent(cleanPath);
-
-  if (!BUCKET) {
-    console.error("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is not set in .env");
+export async function resolveStorageURL(path: string | null | undefined): Promise<string | null> {
+  // Ensure we're running on the client side, as Firebase Storage SDK for web requires it.
+  if (typeof window === "undefined") {
+    console.warn("resolveStorageURL was called on the server. It should only be used in client components.");
+    return null;
+  }
+  
+  if (!path) {
     return null;
   }
 
-  // لو التوكن موجود، نضيفه للرابط
-  const tokenParam = TOKEN ? `&token=${TOKEN}` : "";
-
-  // نرجع الرابط المباشر للملف
-  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${objectPath}?alt=media${tokenParam}`;
-}
-
-/** لو عندك URL قديم مخزّن ببكت appspot، بنصلّحه مؤقتًا */
-export function fixOldBucketUrl(url?: string | null) {
-  if (!url) return null;
-  return url.replace(
-    "/b/studio-3721710978-c50cb.appspot.com/",
-    "/b/studio-3721710978-c50cb.firebasestorage.app/"
-  );
+  try {
+    const storageRef = ref(storage, path);
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (error: any) {
+    // Log errors for debugging, but don't crash the app.
+    // Common errors: 'storage/object-not-found'
+    if (error.code !== 'storage/object-not-found') {
+        console.debug(`Failed to resolve storage URL for path: "${path}"`, error);
+    }
+    return null;
+  }
 }

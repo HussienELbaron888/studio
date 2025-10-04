@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
@@ -14,32 +15,43 @@ type TalentCardProps = {
   imageSizes: string;
 };
 
+const FALLBACK_IMAGE_URL = 'https://picsum.photos/seed/placeholder-talent/400/300';
+
 export function TalentCard({ talent, imageSizes }: TalentCardProps) {
   const { language } = useLanguage();
-  const resolvedUrl = resolveStorageURL(talent.image_path);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (talent.image_path) {
+      resolveStorageURL(talent.image_path).then(url => {
+        if (isMounted && url) {
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { isMounted = false; };
+  }, [talent.image_path]);
+
 
   const name = talent.name[language as keyof typeof talent.name];
   const stage = talent.stage[language as keyof typeof talent.stage];
   const details = talent.details[language as keyof typeof talent.details];
+  
+  const finalImageUrl = imageUrl || FALLBACK_IMAGE_URL;
 
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
-            <Image
-              src={resolvedUrl}
+           <Image
+              src={finalImageUrl}
               alt={name}
               fill
               className="object-cover"
               sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE_URL; }}
             />
-          ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <User className="h-16 w-16 text-muted-foreground" />
-            </div>
-          )}
         </div>
         <div className="p-4 flex flex-col flex-grow">
           <h3 className="font-headline text-lg font-semibold flex items-center">

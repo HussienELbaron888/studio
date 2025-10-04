@@ -21,13 +21,26 @@ type EventCardProps = {
   imageSizes: string;
 };
 
+const FALLBACK_IMAGE_URL = 'https://picsum.photos/seed/placeholder-event/400/300';
+
 export function EventCard({ event, imageSizes }: EventCardProps) {
   const { language, content } = useLanguage();
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const resolvedUrl = resolveStorageURL(event.image_path);
+  useEffect(() => {
+    let isMounted = true;
+    if (event.image_path) {
+      resolveStorageURL(event.image_path).then(url => {
+        if (isMounted && url) {
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { isMounted = false; };
+  }, [event.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -60,24 +73,20 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
   const location = event.location[language as keyof typeof event.location];
   const price = event.price;
 
+  const finalImageUrl = imageUrl || FALLBACK_IMAGE_URL;
+
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
-            <Image
-              src={resolvedUrl}
+           <Image
+              src={finalImageUrl}
               alt={title}
               fill
               className="object-cover"
               sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE_URL; }}
             />
-          ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">No Image</span>
-            </div>
-          )}
         </div>
         <div className="p-4 flex flex-col flex-grow">
           <h3 className="font-headline text-lg font-semibold flex-grow min-h-[3rem]">

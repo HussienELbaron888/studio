@@ -19,7 +19,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 export function EventsCard() {
   const { content, language } = useLanguage();
   const [event, setEvent] = useState<Event | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fallbackImage = PlaceHolderImages.find((img) => img.id === 'events-bg')!;
@@ -34,22 +34,22 @@ export function EventsCard() {
         if (!snapshot.empty) {
           const latestEvent = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Event;
           setEvent(latestEvent);
-          const url = resolveStorageURL(latestEvent.image_path);
-          setImageUrl(url);
-        } else {
-          // No events found, use fallback
-          setImageUrl(fallbackImage.imageUrl);
+          if (latestEvent.image_path) {
+            const url = await resolveStorageURL(latestEvent.image_path);
+            setResolvedImageUrl(url);
+          }
         }
       } catch (error) {
-        console.debug("Error fetching latest event, using fallback.", error);
-        setImageUrl(fallbackImage.imageUrl);
+        console.debug("Error fetching latest event, will use fallback.", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLatestEvent();
-  }, [fallbackImage.imageUrl]);
+  }, []);
+  
+  const finalImageUrl = resolvedImageUrl || fallbackImage.imageUrl;
 
   return (
     <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px]">
@@ -57,7 +57,7 @@ export function EventsCard() {
         <Skeleton className="absolute inset-0" />
       ) : (
         <Image
-          src={imageUrl || fallbackImage.imageUrl}
+          src={finalImageUrl}
           alt={event?.title.en || fallbackImage.description}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"

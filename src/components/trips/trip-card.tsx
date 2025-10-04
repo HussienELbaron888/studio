@@ -21,13 +21,26 @@ type TripCardProps = {
   imageSizes: string;
 };
 
+const FALLBACK_IMAGE_URL = 'https://picsum.photos/seed/placeholder-trip/400/300';
+
 export function TripCard({ trip, imageSizes }: TripCardProps) {
   const { language, content } = useLanguage();
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  
-  const resolvedUrl = resolveStorageURL(trip.image_path);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (trip.image_path) {
+      resolveStorageURL(trip.image_path).then(url => {
+        if (isMounted && url) {
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { isMounted = false; };
+  }, [trip.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -59,25 +72,21 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const destination = trip.destination[language as keyof typeof trip.destination];
   const schedule = trip.schedule[language as keyof typeof trip.schedule];
   const price = trip.price;
+  
+  const finalImageUrl = imageUrl || FALLBACK_IMAGE_URL;
 
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
-            <Image
-              src={resolvedUrl}
-              alt={title}
-              fill
-              className="object-cover"
-              sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
-            />
-          ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">No Image</span>
-            </div>
-          )}
+          <Image
+            src={finalImageUrl}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes={imageSizes}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE_URL; }}
+          />
         </div>
         <div className="p-4 flex flex-col flex-grow">
           <h3 className="font-headline text-lg font-semibold flex-grow min-h-[3rem]">

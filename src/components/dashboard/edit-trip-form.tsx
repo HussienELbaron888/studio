@@ -36,6 +36,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (trip) {
       setTitleAr(trip.title.ar);
       setTitleEn(trip.title.en);
@@ -45,11 +46,15 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       setScheduleEn(trip.schedule.en);
       setPrice(trip.price || "");
       
-      const url = resolveStorageURL(trip.image_path);
-      if (url) {
-        setPreviewUrl(url);
+      if (trip.image_path) {
+        resolveStorageURL(trip.image_path).then(url => {
+          if (isMounted && url) {
+            setPreviewUrl(url);
+          }
+        });
       }
     }
+    return () => { isMounted = false; };
   }, [trip]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
