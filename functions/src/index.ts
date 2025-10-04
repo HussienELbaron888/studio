@@ -229,15 +229,18 @@ export const sendAdminEmail = onCall(
     // This checks custom claims on the user's token
     const role = (ctx.token.role as string) || "user";
     if (role !== "admin") {
+      // eslint-disable-next-line max-len
       throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
     }
 
     const {to, subject, html, text} = req.data || {};
 
     if (!Array.isArray(to) || to.length === 0) {
+      // eslint-disable-next-line max-len
       throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
     }
     if (!subject || (!html && !text)) {
+      // eslint-disable-next-line max-len
       throw new HttpsError("invalid-argument", "Subject and (html or text) are required.");
     }
 
@@ -246,6 +249,7 @@ export const sendAdminEmail = onCall(
     const fromName = BREVO_FROM_NAME.value() || "AGS Activity Platform";
 
     if (!apiKey || !fromEmail) {
+      // eslint-disable-next-line max-len
       throw new HttpsError("failed-precondition", "Brevo environment variables are missing.");
     }
 
@@ -273,6 +277,7 @@ export const sendAdminEmail = onCall(
       if (!res.ok) {
         const msg = await res.text();
         console.error(`Brevo error: ${res.status}`, msg);
+        // eslint-disable-next-line max-len
         throw new HttpsError("internal", `Brevo API error: ${res.status} ${msg}`);
       }
       return {ok: true};

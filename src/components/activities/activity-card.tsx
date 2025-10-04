@@ -16,7 +16,7 @@ import { SubscriptionForm } from './subscription-form';
 import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL } from '@/utils/storage-url';
+import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
 
 
 type ActivityCardProps = {
@@ -38,7 +38,13 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
 
     const fetchUrl = async () => {
         try {
-            const url = await resolveStorageURL(activity.image_path || activity.image?.imageUrl);
+            let url: string | null = null;
+            if (activity.image_path) {
+                url = await resolveStorageURL(activity.image_path);
+            } else if (activity.image?.imageUrl) {
+                url = fixOldBucketUrl(activity.image.imageUrl);
+            }
+            
             if (!cancel) {
                 setResolvedUrl(url);
             }
