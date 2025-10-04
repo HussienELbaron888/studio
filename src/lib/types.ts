@@ -1,4 +1,6 @@
 
+import type { Timestamp } from 'firebase/firestore';
+
 export type Activity = {
   id: string; // Firestore document ID
   title: { en: string; ar: string };
@@ -46,3 +48,11 @@ export type Talent = {
   image_path?: string | null;
   created_at?: any;
 };
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  itemTitle: string;
+  itemType: 'activity' | 'trip' | 'event';
+  subscribedAt: Timestamp;
+}
