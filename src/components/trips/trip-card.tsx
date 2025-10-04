@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Trip } from '@/lib/types';
-import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
@@ -28,33 +27,6 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setIsLoading(true);
-    
-    const fetchUrl = async () => {
-      try {
-        const url = await resolveStorageURL(trip.image_path);
-        if (alive) {
-          setResolvedUrl(url);
-        }
-      } catch (e: any) {
-        if (alive) setResolvedUrl(null);
-        console.debug("img resolve failed:", trip.image_path, e?.code || e?.message);
-      } finally {
-        if (alive) {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    fetchUrl();
-
-    return () => { alive = false; };
-  }, [trip.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -82,6 +54,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     return () => unsubscribe();
   }, [user?.uid, trip.id]);
 
+  const resolvedUrl = resolveStorageURL(trip.image_path);
   const title = trip.title[language as keyof typeof trip.title];
   const destination = trip.destination[language as keyof typeof trip.destination];
   const schedule = trip.schedule[language as keyof typeof trip.schedule];
@@ -91,15 +64,14 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isLoading ? (
-            <Skeleton className="h-full w-full" />
-          ) : resolvedUrl ? (
+          {resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={title}
               fill
               className="object-cover"
               sizes={imageSizes}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/2/600/400"; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">

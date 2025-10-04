@@ -1,6 +1,6 @@
 
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 
 export type AlbumValues = {
@@ -9,14 +9,11 @@ export type AlbumValues = {
 };
 
 async function uploadAlbumImages(files: File[], albumId: string) {
-    const max = Math.min(files.length, 10);
-    const uploadPromises = [];
-
-    for (let i = 0; i < max; i++) {
-        const file = files[i];
+    const uploadPromises = files.map((file, i) => {
         const fileRef = ref(storage, `albums/${albumId}/image_${Date.now()}_${i}`);
-        uploadPromises.push(uploadBytes(fileRef, file).then(snapshot => getDownloadURL(snapshot.ref)));
-    }
+        // Return the full path after upload is complete
+        return uploadBytes(fileRef, file).then(snapshot => snapshot.ref.fullPath);
+    });
     return Promise.all(uploadPromises);
 }
 
@@ -25,20 +22,20 @@ export async function saveAlbum(values: AlbumValues, files: File[]) {
   const albumRef = doc(collection(db, "albums"));
   const albumId = albumRef.id;
 
-  let imageUrls: string[] = [];
+  let imagePaths: string[] = [];
 
   if (files.length > 0) {
-    imageUrls = await uploadAlbumImages(files, albumId);
+    imagePaths = await uploadAlbumImages(files, albumId);
   }
 
   const docBody = {
     title: { ar: values.title_ar || "", en: values.title_en || "" },
     date: values.date || "",
-    imageUrls: imageUrls,
+    imageUrls: imagePaths, // Storing paths instead of download URLs
     created_at: serverTimestamp(),
   };
 
   await setDoc(albumRef, docBody);
 
-  return { id: albumId, imageUrls };
+  return { id: albumId, imagePaths };
 }

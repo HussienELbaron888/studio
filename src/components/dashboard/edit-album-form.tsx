@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import type { Album } from "@/lib/types";
 import { updateAlbum } from "@/utils/update-album";
 import { useLanguage } from "@/context/language-context";
+import { resolveStorageURL } from "@/utils/storage-url";
 
 type EditAlbumFormProps = {
   album: Album;
@@ -26,9 +27,9 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
   const [titleEn, setTitleEn] = useState("");
   const [date, setDate] = useState("");
   
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [existingImagePaths, setExistingImagePaths] = useState<string[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -39,8 +40,8 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
       setTitleAr(album.title.ar);
       setTitleEn(album.title.en);
       setDate(album.date);
-      setExistingImageUrls(album.imageUrls || []);
-      setPreviewUrls(album.imageUrls || []);
+      setExistingImagePaths(album.imageUrls || []);
+      setPreviewUrls((album.imageUrls || []).map(path => resolveStorageURL(path)));
     }
   }, [album]);
 
@@ -48,12 +49,12 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      const totalImages = existingImageUrls.length + files.length;
+      const totalImages = existingImagePaths.length + newImageFiles.length + files.length;
       if (totalImages > 10) {
         toast({ title: "Error", description: "You can upload a maximum of 10 images in total.", variant: "destructive" });
         return;
       }
-      setImageFiles(prev => [...prev, ...files]);
+      setNewImageFiles(prev => [...prev, ...files]);
       setPreviewUrls(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
     }
   };
@@ -70,26 +71,31 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
     e.stopPropagation();
     setDragActive(false);
     const files = Array.from(e.dataTransfer.files || []);
-    if (files.length > 0) {
-      const totalImages = previewUrls.length + files.length;
+     if (files.length > 0) {
+      const totalImages = existingImagePaths.length + newImageFiles.length + files.length;
       if (totalImages > 10) {
         toast({ title: "Error", description: "You can upload a maximum of 10 images in total.", variant: "destructive" });
         return;
       }
-      setImageFiles(prev => [...prev, ...files]);
+      setNewImageFiles(prev => [...prev, ...files]);
       setPreviewUrls(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
     }
   };
 
-  const removeImage = (index: number, url: string) => {
-    // Check if it's an existing image or a new preview
-    if (existingImageUrls.includes(url)) {
-      setExistingImageUrls(prev => prev.filter(imgUrl => imgUrl !== url));
-    } else {
-      const fileIndex = previewUrls.indexOf(url) - existingImageUrls.length;
-      if(fileIndex >= 0) {
-        setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+  const removeImage = (index: number) => {
+    const urlToRemove = previewUrls[index];
+    
+    // It's a newly added file (blob URL)
+    if (urlToRemove.startsWith('blob:')) {
+      const newFileIndex = previewUrls.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
+      if(newFileIndex > -1) {
+        setNewImageFiles(prev => prev.filter((_, i) => i !== newFileIndex));
       }
+    } else { // It's an existing image (Firebase URL)
+       const pathToRemove = existingImagePaths.find(path => resolveStorageURL(path) === urlToRemove);
+       if (pathToRemove) {
+         setExistingImagePaths(prev => prev.filter(p => p !== pathToRemove));
+       }
     }
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
@@ -97,7 +103,7 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const totalImages = previewUrls.length;
+    const totalImages = existingImagePaths.length + newImageFiles.length;
      if (totalImages === 0) {
       toast({ title: "Error", description: "Please upload at least one image.", variant: "destructive" });
       return;
@@ -115,7 +121,7 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
     };
     
     try {
-      await updateAlbum(album.id, values, existingImageUrls, imageFiles);
+      await updateAlbum(album.id, values, existingImagePaths, newImageFiles, album.imageUrls);
       toast({
         title: "Success",
         description: "Album updated successfully!",
@@ -155,14 +161,14 @@ export function EditAlbumForm({ album, setDialogOpen }: EditAlbumFormProps) {
         
         <div className="grid grid-cols-3 gap-2 mb-4">
             {previewUrls.map((url, index) => (
-                <div key={index} className="relative w-full aspect-square rounded-md overflow-hidden border">
-                    <Image src={url} alt={`Preview ${index}`} fill style={{ objectFit: 'cover' }} />
+                <div key={url} className="relative w-full aspect-square rounded-md overflow-hidden border">
+                    <Image src={url} alt={`Preview ${index}`} fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/13/200/200"; }} />
                     <Button
                     type="button"
                     variant="destructive"
                     size="icon"
                     className="absolute top-1 right-1 h-6 w-6 rounded-full z-10"
-                    onClick={() => removeImage(index, url)}
+                    onClick={() => removeImage(index)}
                     >
                     <X className="h-4 w-4" />
                     </Button>

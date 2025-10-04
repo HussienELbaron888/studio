@@ -11,9 +11,13 @@ import type { Album } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlbumViewer } from "@/components/gallery/album-viewer";
+import { resolveStorageURL } from "@/utils/storage-url";
 
 function AlbumCard({ album }: { album: Album }) {
     const { language } = useLanguage();
+    const coverImageUrl = album.imageUrls && album.imageUrls.length > 0
+        ? resolveStorageURL(album.imageUrls[0])
+        : null;
 
     return (
         <Dialog>
@@ -21,13 +25,14 @@ function AlbumCard({ album }: { album: Album }) {
                 <Card className="overflow-hidden cursor-pointer group">
                    <CardHeader className="p-0">
                      <div className="relative w-full aspect-video">
-                        {album.imageUrls && album.imageUrls.length > 0 ? (
+                        {coverImageUrl ? (
                             <Image
-                                src={album.imageUrls[0]}
+                                src={coverImageUrl}
                                 alt={album.title?.[language as keyof typeof album.title] || ''}
                                 fill
                                 sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                 className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/11/600/400"; }}
                             />
                         ) : (
                             <div className="bg-muted flex items-center justify-center h-full">

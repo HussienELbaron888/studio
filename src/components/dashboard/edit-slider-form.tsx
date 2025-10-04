@@ -40,7 +40,6 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    let alive = true;
     if (slide) {
         setTitleAr(slide.title.ar);
         setTitleEn(slide.title.en);
@@ -52,12 +51,9 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
         setOrder(slide.order);
         setPublished(slide.published);
         if (slide.image_path) {
-          resolveStorageURL(slide.image_path).then(url => {
-              if (alive && url) setPreviewUrl(url);
-          }).catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+          setPreviewUrl(resolveStorageURL(slide.image_path));
         }
     }
-    return () => { alive = false; }
   }, [slide]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +161,7 @@ export function EditSliderForm({ slide, setDialogOpen }: EditSliderFormProps) {
         <Label>Image</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/8/600/400"; }} />
             <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={removeImage}>
               <X className="h-4 w-4" />
             </Button>

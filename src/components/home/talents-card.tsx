@@ -40,7 +40,7 @@ export function TalentsCard() {
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
           if (latestTalent.image_path) {
-            const resolved = await resolveStorageURL(latestTalent.image_path);
+            const resolved = resolveStorageURL(latestTalent.image_path);
             if (resolved) {
                 finalUrl = resolved;
                 finalAlt = latestTalent.name.en;
@@ -84,6 +84,7 @@ export function TalentsCard() {
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
+                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImageUrl; }}
             />
         )
       )}

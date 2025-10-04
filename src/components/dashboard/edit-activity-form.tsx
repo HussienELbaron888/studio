@@ -44,7 +44,6 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    let alive = true;
     if (activity) {
       setTitleAr(activity.title.ar);
       setTitleEn(activity.title.en);
@@ -58,14 +57,9 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       setType(activity.type || "Free");
       
       if (activity.image_path) {
-        resolveStorageURL(activity.image_path)
-          .then(url => {
-            if (alive && url) setPreviewUrl(url);
-          })
-          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+        setPreviewUrl(resolveStorageURL(activity.image_path));
       }
     }
-    return () => { alive = false; };
   }, [activity]);
 
 
@@ -206,7 +200,7 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/6/600/400"; }} />
             <Button
               type="button"
               variant="destructive"

@@ -10,6 +10,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { useLanguage } from '@/context/language-context';
+import { resolveStorageURL } from '@/utils/storage-url';
 
 type AlbumViewerProps = {
   imageUrls: string[];
@@ -33,19 +34,23 @@ export function AlbumViewer({ imageUrls }: AlbumViewerProps) {
         className="w-full"
       >
         <CarouselContent>
-          {imageUrls.map((url, index) => (
-            <CarouselItem key={index}>
-              <div className="relative aspect-video w-full">
-                <Image
-                  src={url}
-                  alt={`Album image ${index + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1000px"
-                />
-              </div>
-            </CarouselItem>
-          ))}
+          {imageUrls.map((path, index) => {
+            const url = resolveStorageURL(path);
+            return (
+              <CarouselItem key={index}>
+                <div className="relative aspect-video w-full">
+                  <Image
+                    src={url}
+                    alt={`Album image ${index + 1}`}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1000px"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/12/800/450"; }}
+                  />
+                </div>
+              </CarouselItem>
+            );
+          })}
         </CarouselContent>
        {imageUrls.length > 1 && (
          <>

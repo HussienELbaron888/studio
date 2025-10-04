@@ -38,7 +38,6 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    let alive = true;
     if (talent) {
       setNameAr(talent.name.ar);
       setNameEn(talent.name.en);
@@ -48,14 +47,9 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
       setDetailsEn(talent.details.en);
       
       if (talent.image_path) {
-        resolveStorageURL(talent.image_path)
-          .then(url => {
-            if (alive && url) setPreviewUrl(url);
-          })
-          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+        setPreviewUrl(resolveStorageURL(talent.image_path));
       }
     }
-    return () => { alive = false; };
   }, [talent]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +156,7 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/9/600/400"; }} />
             <Button
               type="button"
               variant="destructive"

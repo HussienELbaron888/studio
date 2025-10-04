@@ -38,7 +38,6 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    let alive = true;
     if (trip) {
       setTitleAr(trip.title.ar);
       setTitleEn(trip.title.en);
@@ -49,14 +48,9 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       setPrice(trip.price || "");
       
       if (trip.image_path) {
-        resolveStorageURL(trip.image_path)
-          .then(url => {
-            if (alive && url) setPreviewUrl(url);
-          })
-          .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
+        setPreviewUrl(resolveStorageURL(trip.image_path));
       }
     }
-    return () => { alive = false; };
   }, [trip]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +164,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/10/600/400"; }} />
             <Button
               type="button"
               variant="destructive"

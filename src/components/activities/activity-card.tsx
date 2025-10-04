@@ -13,7 +13,6 @@ import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/types';
 import { SubscriptionForm } from './subscription-form';
-import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
@@ -29,33 +28,6 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setIsLoading(true);
-
-    const fetchUrl = async () => {
-        try {
-            const url = await resolveStorageURL(activity.image_path);
-            if (alive) {
-                setResolvedUrl(url);
-            }
-        } catch (e: any) {
-             if (alive) setResolvedUrl(null);
-             console.debug("Image resolve failed:", activity.image_path, e?.code || e?.message);
-        } finally {
-            if (alive) {
-                setIsLoading(false);
-            }
-        }
-    };
-    
-    fetchUrl();
-
-    return () => { alive = false; };
-  }, [activity.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -83,6 +55,8 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     return () => unsubscribe();
   }, [user?.uid, activity.id]);
 
+  const resolvedUrl = resolveStorageURL(activity.image_path);
+
   const schedule = activity.schedule?.[language as keyof typeof activity.schedule];
   const time = activity.time;
   const sessions = activity.sessions;
@@ -93,15 +67,14 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isLoading ? (
-            <Skeleton className="h-full w-full" />
-          ) : resolvedUrl ? (
+          {resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={activity.title.en}
               fill
               className="object-cover"
               sizes={imageSizes}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/1/600/400"; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
