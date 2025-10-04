@@ -3,11 +3,15 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
   initializeApp();
 }
+// Initialize Firestore once
+const db = getFirestore();
+
 
 const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
@@ -171,8 +175,6 @@ export const adminDeleteSubscription = onCall(
     if (!subId) throw new HttpsError("invalid-argument", "subId is required.");
 
     // لا نفتح القواعد للعميل؛ نحذف هنا على الخادم
-    const { getFirestore } = await import("firebase-admin/firestore");
-    const db = getFirestore();
     const ref = db.collection("subscriptions").doc(subId);
     const snap = await ref.get();
     if (!snap.exists) throw new HttpsError("not-found", "Subscription not found.");
@@ -195,11 +197,9 @@ export const sendCustomEmailToSubscription = onCall(
       throw new HttpsError("invalid-argument", "subId, subject, html are required.");
     }
 
-    const { getFirestore } = await import("firebase-admin/firestore");
-    const db = getFirestore();
-    const doc = await db.collection("subscriptions").doc(subId).get();
-    if (!doc.exists) throw new HttpsError("not-found", "Subscription not found.");
-    const data = doc.data() || {};
+    const docSnap = await db.collection("subscriptions").doc(subId).get();
+    if (!docSnap.exists) throw new HttpsError("not-found", "Subscription not found.");
+    const data = docSnap.data() || {};
     const userId = data.userId as string | undefined;
     if (!userId) throw new HttpsError("failed-precondition", "Subscription has no userId.");
 
@@ -259,8 +259,6 @@ export const sendCustomEmailBulk = onCall(
       throw new HttpsError("invalid-argument", "subIds[], subject, html are required.");
     }
 
-    const { getFirestore } = await import("firebase-admin/firestore");
-    const db = getFirestore();
     const adminAuth = getAdminAuth();
 
     // إعداد Brevo مرة واحدة
