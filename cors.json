@@ -1,17 +1,12 @@
 [
   {
-    "origin": [
-      "*"
-    ],
-    "method": [
-      "GET",
-      "HEAD",
-      "OPTIONS"
-    ],
+    "origin": ["*"],
+    "method": ["GET", "HEAD", "OPTIONS"],
     "responseHeader": [
       "Content-Type",
-      "Access-Control-Allow-Origin",
-      "x-goog-meta-*"
+      "x-goog-meta-*",
+      "x-goog-resumable",
+      "Authorization"
     ],
     "maxAgeSeconds": 3600
   }
