@@ -1,6 +1,6 @@
 // src/utils/storage-url.ts
-const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
-const TOKEN  = process.env.NEXT_PUBLIC_FB_DL_TOKEN || "";
+const BUCKET = "studio-3721710978-c50cb.appspot.com";
+const TOKEN  = "9c1e3e5b-2c7b-4b7a-9a6e-0123456789ab";
 
 export function resolveStorageURL(path: string | null | undefined): string {
   if (!path) return "";
