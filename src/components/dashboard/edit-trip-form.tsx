@@ -45,11 +45,10 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       setScheduleEn(trip.schedule.en);
       setPrice(trip.price || "");
       
-      resolveStorageURL(trip.image_path)
-        .then(url => {
-          if (url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      const url = resolveStorageURL(trip.image_path);
+      if (url) {
+        setPreviewUrl(url);
+      }
     }
   }, [trip]);
 
@@ -164,7 +163,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
             <Button
               type="button"
               variant="destructive"

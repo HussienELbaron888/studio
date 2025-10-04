@@ -34,18 +34,14 @@ export function EventsCard() {
         if (!snapshot.empty) {
           const latestEvent = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Event;
           setEvent(latestEvent);
-          if (latestEvent.image_path) {
-            const url = await resolveStorageURL(latestEvent.image_path);
-            setImageUrl(url);
-          } else {
-            setImageUrl(fallbackImage.imageUrl);
-          }
+          const url = resolveStorageURL(latestEvent.image_path);
+          setImageUrl(url);
         } else {
           // No events found, use fallback
           setImageUrl(fallbackImage.imageUrl);
         }
       } catch (error) {
-        console.error("Error fetching latest event:", error);
+        console.debug("Error fetching latest event, using fallback.", error);
         setImageUrl(fallbackImage.imageUrl);
       } finally {
         setLoading(false);
@@ -67,6 +63,7 @@ export function EventsCard() {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           data-ai-hint={event ? 'event concert' : fallbackImage.imageHint}
           sizes="(max-width: 768px) 100vw, 50vw"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImage.imageUrl; }}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />

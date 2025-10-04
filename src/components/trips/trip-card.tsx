@@ -11,12 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Trip } from '@/lib/types';
-import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
+import { resolveStorageURL } from '@/utils/storage-url';
 import { TripSubscriptionForm } from './trip-subscription-form';
-
 
 type TripCardProps = {
   trip: Trip;
@@ -28,38 +26,8 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
-
-  useEffect(() => {
-    let cancel = false;
-    setIsImageLoading(true);
-    
-    const fetchUrl = async () => {
-      try {
-        let url: string | null = null;
-        if (trip.image_path) {
-            url = await resolveStorageURL(trip.image_path);
-        } else if ((trip as any).image?.imageUrl) {
-            url = fixOldBucketUrl((trip as any).image.imageUrl);
-        }
-        
-        if (!cancel) {
-          setResolvedUrl(url);
-        }
-      } catch (e) {
-        console.error("img resolve failed:", e);
-      } finally {
-        if (!cancel) {
-          setIsImageLoading(false);
-        }
-      }
-    };
-    
-    fetchUrl();
-
-    return () => { cancel = true; };
-  }, [trip.image_path, (trip as any).image?.imageUrl]);
+  
+  const resolvedUrl = resolveStorageURL(trip.image_path);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -96,15 +64,14 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isImageLoading ? (
-            <Skeleton className="h-full w-full" />
-          ) : resolvedUrl ? (
+          {resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={title}
               fill
               className="object-cover"
               sizes={imageSizes}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">

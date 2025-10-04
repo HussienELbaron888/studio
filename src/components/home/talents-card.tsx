@@ -34,21 +34,15 @@ export function TalentsCard() {
         
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
-          if (latestTalent.image_path) {
-            const url = await resolveStorageURL(latestTalent.image_path);
-            if (url) {
-              setImageUrl(url);
-              setImageAlt(latestTalent.name.en);
-              setImageHint('student portrait'); // Generic hint
-            } else {
-              setImageUrl(fallbackImage.imageUrl);
-              setImageAlt(fallbackImage.description);
-              setImageHint(fallbackImage.imageHint);
-            }
+          const url = resolveStorageURL(latestTalent.image_path);
+          if (url) {
+            setImageUrl(url);
+            setImageAlt(latestTalent.name.en);
+            setImageHint('student portrait'); // Generic hint
           } else {
-             setImageUrl(fallbackImage.imageUrl);
-             setImageAlt(fallbackImage.description);
-             setImageHint(fallbackImage.imageHint);
+            setImageUrl(fallbackImage.imageUrl);
+            setImageAlt(fallbackImage.description);
+            setImageHint(fallbackImage.imageHint);
           }
         } else {
           setImageUrl(fallbackImage.imageUrl);
@@ -56,8 +50,7 @@ export function TalentsCard() {
           setImageHint(fallbackImage.imageHint);
         }
       } catch (error) {
-        console.error("Error fetching latest talent:", error);
-        // On error, use fallback
+        console.debug("Error fetching latest talent, using fallback.", error);
         setImageUrl(fallbackImage.imageUrl);
         setImageAlt(fallbackImage.description);
         setImageHint(fallbackImage.imageHint);
@@ -82,6 +75,7 @@ export function TalentsCard() {
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 data-ai-hint={imageHint}
                 sizes="(max-width: 768px) 100vw, 50vw"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImage.imageUrl; }}
             />
         )
       )}

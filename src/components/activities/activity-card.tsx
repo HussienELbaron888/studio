@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { collection, query, where, onSnapshot, limit } from "firebase/firestore";
 import { db } from '@/lib/firebase';
@@ -13,10 +13,9 @@ import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Activity } from '@/lib/types';
 import { SubscriptionForm } from './subscription-form';
-import { Skeleton } from '../ui/skeleton';
 import { CalendarDays, Clock, Repeat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
+import { resolveStorageURL } from '@/utils/storage-url';
 
 
 type ActivityCardProps = {
@@ -29,43 +28,10 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  
+  const resolvedUrl = resolveStorageURL(activity.image_path);
 
-   useEffect(() => {
-    let cancel = false;
-    setIsImageLoading(true);
-
-    const fetchUrl = async () => {
-        try {
-            let url: string | null = null;
-            if (activity.image_path) {
-                url = await resolveStorageURL(activity.image_path);
-            } else if (activity.image?.imageUrl) {
-                url = fixOldBucketUrl(activity.image.imageUrl);
-            }
-            
-            if (!cancel) {
-                setResolvedUrl(url);
-            }
-        } catch (e) {
-            console.error("Image resolve failed:", e);
-            if (!cancel) {
-                setResolvedUrl(null);
-            }
-        } finally {
-            if (!cancel) {
-                setIsImageLoading(false);
-            }
-        }
-    };
-    
-    fetchUrl();
-
-    return () => { cancel = true; };
-  }, [activity.image_path, activity.image?.imageUrl]);
-
-  useEffect(() => {
+  useState(() => {
     const uid = user?.uid;
     if (!uid) {
       setIsSubscribed(false);
@@ -89,7 +55,7 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     });
 
     return () => unsubscribe();
-  }, [user?.uid, activity.id]);
+  });
 
   const schedule = activity.schedule?.[language as keyof typeof activity.schedule];
   const time = activity.time;
@@ -101,16 +67,14 @@ export function ActivityCard({ activity, imageSizes }: ActivityCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {isImageLoading ? (
-            <Skeleton className="h-full w-full" />
-          ) : resolvedUrl ? (
+          {resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={activity.image?.description || activity.title.en}
               fill
               className="object-cover"
-              data-ai-hint={activity.image?.imageHint}
               sizes={imageSizes}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/300'; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">

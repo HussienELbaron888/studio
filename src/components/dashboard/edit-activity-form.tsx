@@ -15,7 +15,6 @@ import type { Activity } from "@/lib/types";
 import { ActivityValues, updateImageAndSaveActivity } from "@/utils/updateActivity";
 import { resolveStorageURL } from "@/utils/storage-url";
 
-
 type EditActivityFormProps = {
   activity: Activity;
   setDialogOpen: (open: boolean) => void;
@@ -54,11 +53,10 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
       setPrice(activity.price || "");
       setType(activity.type || "Free");
       
-      resolveStorageURL(activity.image_path)
-        .then(url => {
-          if (url) setPreviewUrl(url);
-        })
-        .catch(console.error);
+      const url = resolveStorageURL(activity.image_path);
+      if (url) {
+        setPreviewUrl(url);
+      }
     }
   }, [activity]);
 
@@ -200,7 +198,7 @@ export function EditActivityForm({ activity, setDialogOpen }: EditActivityFormPr
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
             <Button
               type="button"
               variant="destructive"

@@ -1,23 +1,31 @@
-// src/utils/storage-url.ts
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 
-/** يرجّع URL صالح للعرض من مسار Storage مثل "activities/.../cover.jpg" */
-export async function resolveStorageURL(imagePath?: string | null) {
-  if (!imagePath) return null;
-  try {
-    return await getDownloadURL(ref(storage, imagePath));
-  } catch (error: any) {
-    // Firebase throws an error if the file doesn't exist. 
-    // We can safely ignore this and return null.
-    if (error.code === 'storage/object-not-found') {
-      console.warn(`Image not found at path: ${imagePath}`);
-      return null;
-    }
-    // For other errors, we might want to log them.
-    console.error("Error getting download URL:", error);
+"use client";
+
+const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
+const TOKEN = process.env.NEXT_PUBLIC_FB_DL_TOKEN || "";
+
+/**
+ * يبني رابط تحميل مباشر للصورة من Storage باستخدام توكن ثابت.
+ * @param path - المسار داخل البكت (e.g., "trips/ID/cover_123.jpg")
+ * @returns رابط URL قابل للعرض مباشرة.
+ */
+export function resolveStorageURL(path: string | null | undefined): string | null {
+  if (!path) return null;
+
+  // نتأكد من أن المسار لا يبدأ بسلاش
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  const objectPath = encodeURIComponent(cleanPath);
+
+  if (!BUCKET) {
+    console.error("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is not set in .env");
     return null;
   }
+
+  // لو التوكن موجود، نضيفه للرابط
+  const tokenParam = TOKEN ? `&token=${TOKEN}` : "";
+
+  // نرجع الرابط المباشر للملف
+  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${objectPath}?alt=media${tokenParam}`;
 }
 
 /** لو عندك URL قديم مخزّن ببكت appspot، بنصلّحه مؤقتًا */
