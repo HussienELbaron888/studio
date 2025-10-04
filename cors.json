@@ -1,12 +1,21 @@
 [
   {
-    "origin": ["*"],
+    "origin": [
+      "https://9000-firebase-studio-1759146317337.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev",
+      "http://localhost:3000",
+      "https://*.web.app",
+      "https://*.firebaseapp.com",
+      "*"
+    ],
     "method": ["GET", "HEAD", "OPTIONS"],
     "responseHeader": [
       "Content-Type",
       "x-goog-meta-*",
       "x-goog-resumable",
-      "Authorization"
+      "Authorization",
+      "Accept",
+      "Origin",
+      "Referer"
     ],
     "maxAgeSeconds": 3600
   }
