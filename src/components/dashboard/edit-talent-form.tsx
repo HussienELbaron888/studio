@@ -55,7 +55,7 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
           .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
       }
     }
-    return () => { alive = false; }
+    return () => { alive = false; };
   }, [talent]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {

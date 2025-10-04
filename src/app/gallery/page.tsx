@@ -13,15 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlbumViewer } from "@/components/gallery/album-viewer";
 
 function AlbumCard({ album }: { album: Album }) {
-    const [firstImageUrl, setFirstImageUrl] = useState<string | null>(null);
     const { language } = useLanguage();
-
-    useEffect(() => {
-      // The imageUrls are already resolved to download URLs
-      if (album.imageUrls && album.imageUrls.length > 0) {
-        setFirstImageUrl(album.imageUrls[0]);
-      }
-    }, [album.imageUrls]);
 
     return (
         <Dialog>
@@ -29,9 +21,9 @@ function AlbumCard({ album }: { album: Album }) {
                 <Card className="overflow-hidden cursor-pointer group">
                    <CardHeader className="p-0">
                      <div className="relative w-full aspect-video">
-                        {firstImageUrl ? (
+                        {album.imageUrls && album.imageUrls.length > 0 ? (
                             <Image
-                                src={firstImageUrl}
+                                src={album.imageUrls[0]}
                                 alt={album.title?.[language as keyof typeof album.title] || ''}
                                 fill
                                 sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"

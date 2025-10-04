@@ -4,6 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
+// Hardcoded config for simplicity in this environment
 const firebaseConfig = {
   apiKey: "AIzaSyAF7BK3glD5I3QLB15k750mytV3N0LuAE4",
   authDomain: "studio-3721710978-c50cb.firebaseapp.com",

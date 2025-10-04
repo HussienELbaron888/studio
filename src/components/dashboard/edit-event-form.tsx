@@ -58,7 +58,7 @@ export function EditEventForm({ event, setDialogOpen }: EditEventFormProps) {
           .catch(e => console.debug("Failed to resolve image URL for edit form:", e));
       }
     }
-    return () => { alive = false; }
+    return () => { alive = false; };
   }, [event]);
 
 
