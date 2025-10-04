@@ -1,11 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import {
   Carousel,
   CarouselContent,
@@ -13,63 +9,15 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { sliderItems } from '@/lib/placeholder-data';
 import { useLanguage } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Autoplay from "embla-carousel-autoplay";
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Slide } from '@/lib/types';
-import { resolveStorageURL } from '@/utils/storage-url';
-
-function HeroSliderSkeleton() {
-  return (
-    <div className="relative h-[400px] w-full md:h-[500px] lg:h-[600px]">
-      <Skeleton className="h-full w-full" />
-      <div className="absolute inset-0 flex items-end p-6 md:p-12">
-        <div className="max-w-2xl w-full space-y-4">
-          <Skeleton className="h-12 w-3/4" />
-          <Skeleton className="h-6 w-1/2" />
-          <Skeleton className="h-12 w-32" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
+import Autoplay from "embla-carousel-autoplay"
 
 export function HeroSlider() {
-  const { language } = useLanguage();
-  const [slides, setSlides] = useState<Slide[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const q = query(
-      collection(db, "slides"),
-      where("published", "==", true),
-      orderBy("order", "asc"),
-      orderBy("createdAt", "desc")
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const slidesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Slide));
-      setSlides(slidesData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching slides:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <HeroSliderSkeleton />;
-  }
-  
-  if (!slides.length) {
-    return null; // Or a fallback component
-  }
+  const { language, content } = useLanguage();
 
   return (
     <Carousel
@@ -78,54 +26,43 @@ export function HeroSlider() {
       plugins={[Autoplay({ delay: 5000 })]}
     >
       <CarouselContent>
-        {slides.map((item, index) => {
-          const imageUrl = resolveStorageURL(item.image_path);
-          return (
-            <CarouselItem key={item.id}>
-              <div className="relative h-[400px] w-full md:h-[500px] lg:h-[600px]">
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={item.title[language as keyof typeof item.title]}
-                    fill
-                    className="object-cover"
-                    priority={index === 0}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/5/1200/600"; }}
-                  />
-                ) : (
-                  <Skeleton className="w-full h-full" />
-                )}
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                <div className="absolute inset-0 flex items-end p-6 md:p-12">
-                  <div className="max-w-2xl text-white">
-                    <h2 className="font-headline text-3xl font-bold md:text-5xl lg:text-6xl">
-                      {item.title[language as keyof typeof item.title]}
-                    </h2>
-                    <p className="mt-2 text-base md:mt-4 md:text-xl">
-                      {item.description[language as keyof typeof item.description]}
-                    </p>
-                    <Button
-                      asChild
-                      size="lg"
-                      className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 md:mt-6"
-                    >
-                      <Link href={item.buttonHref}>
-                        <span>{item.buttonText[language as keyof typeof item.buttonText]}</span>
-                        <ArrowRight
-                          className={cn(
-                            'h-5 w-5',
-                            language === 'ar' ? 'mr-2' : 'ml-2'
-                          )}
-                        />
-                      </Link>
-                    </Button>
-                  </div>
+        {sliderItems.map((item) => (
+          <CarouselItem key={item.id}>
+            <div className="relative h-[400px] w-full md:h-[500px] lg:h-[600px]">
+              <Image
+                src={item.image.imageUrl}
+                alt={item.image.description}
+                fill
+                className="object-cover"
+                data-ai-hint={item.image.imageHint}
+                priority={item.id === 1}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              <div className="absolute inset-0 flex items-end p-6 md:p-12">
+                <div className="max-w-2xl text-white">
+                  <h2 className="font-headline text-3xl font-bold md:text-5xl lg:text-6xl">
+                    {item.title[language]}
+                  </h2>
+                  <p className="mt-2 text-base md:mt-4 md:text-xl">
+                    {item.subtitle[language]}
+                  </p>
+                  <Button
+                    size="lg"
+                    className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 md:mt-6"
+                  >
+                    <span>{content.eventsButton}</span>
+                    <ArrowRight
+                      className={cn(
+                        'h-5 w-5',
+                        language === 'ar' ? 'mr-2' : 'ml-2'
+                      )}
+                    />
+                  </Button>
                 </div>
               </div>
-            </CarouselItem>
-          )}
-        )}
+            </div>
+          </CarouselItem>
+        ))}
       </CarouselContent>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
         <div className="flex items-center justify-center gap-4 rounded-full bg-card/50 p-2 backdrop-blur-sm">

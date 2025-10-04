@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Event } from '@/lib/types';
-import { MapPin, DollarSign, ImageIcon } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
 import { EventSubscriptionForm } from './event-subscription-form';
@@ -27,6 +28,32 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    setIsImageLoading(true);
+    
+    const fetchUrl = async () => {
+      try {
+        const url = await resolveStorageURL(event.image_path);
+        if (!cancel) {
+          setResolvedUrl(url);
+        }
+      } catch (e) {
+        console.error("img resolve failed:", e);
+      } finally {
+        if (!cancel) {
+          setIsImageLoading(false);
+        }
+      }
+    };
+    
+    fetchUrl();
+
+    return () => { cancel = true; };
+  }, [event.image_path]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -38,7 +65,7 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("itemId", "==", event.id),
+      where("eventId", "==", event.id),
       where("userId", "==", uid),
       limit(1)
     );
@@ -54,7 +81,6 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     return () => unsubscribe();
   }, [user?.uid, event.id]);
 
-  const resolvedUrl = resolveStorageURL(event.image_path);
   const title = event.title[language as keyof typeof event.title];
   const description = event.description[language as keyof typeof event.description];
   const location = event.location[language as keyof typeof event.location];
@@ -64,18 +90,19 @@ export function EventCard({ event, imageSizes }: EventCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
+          {isImageLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={title}
               fill
               className="object-cover"
               sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/3/600/400"; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">No Image</span>
             </div>
           )}
         </div>

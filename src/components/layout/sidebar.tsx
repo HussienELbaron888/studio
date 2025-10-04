@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -94,7 +93,7 @@ export function AppSidebar() {
     <Sidebar
       side={language === 'ar' ? 'right' : 'left'}
       collapsible="icon"
-      className="z-30 pt-20"
+      className="z-30 pt-16"
     >
       <SidebarHeader className="border-b h-12">
         {/* Empty header as requested */}

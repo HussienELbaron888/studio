@@ -1,11 +1,13 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/context/language-context';
 import type { Talent } from '@/lib/types';
-import { User, Award, Info, ImageIcon } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { User, Award, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveStorageURL } from '@/utils/storage-url';
 
@@ -16,8 +18,33 @@ type TalentCardProps = {
 
 export function TalentCard({ talent, imageSizes }: TalentCardProps) {
   const { language } = useLanguage();
-  
-  const resolvedUrl = resolveStorageURL(talent.image_path);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    setIsImageLoading(true);
+    
+    const fetchUrl = async () => {
+      try {
+        const url = await resolveStorageURL(talent.image_path);
+        if (!cancel) {
+          setResolvedUrl(url);
+        }
+      } catch (e) {
+        console.error("img resolve failed:", e);
+      } finally {
+        if (!cancel) {
+          setIsImageLoading(false);
+        }
+      }
+    };
+    
+    fetchUrl();
+
+    return () => { cancel = true; };
+  }, [talent.image_path]);
+
   const name = talent.name[language as keyof typeof talent.name];
   const stage = talent.stage[language as keyof typeof talent.stage];
   const details = talent.details[language as keyof typeof talent.details];
@@ -26,18 +53,19 @@ export function TalentCard({ talent, imageSizes }: TalentCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
+          {isImageLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={name}
               fill
               className="object-cover"
               sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/4/600/400"; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <ImageIcon className="h-16 w-16 text-muted-foreground" />
+              <User className="h-16 w-16 text-muted-foreground" />
             </div>
           )}
         </div>

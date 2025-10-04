@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useLanguage } from '@/context/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import type { Trip } from '@/lib/types';
-import { CalendarDays, MapPin, DollarSign, ImageIcon } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { CalendarDays, MapPin, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveStorageURL } from '@/utils/storage-url';
+import { resolveStorageURL, fixOldBucketUrl } from '@/utils/storage-url';
 import { TripSubscriptionForm } from './trip-subscription-form';
 
 
@@ -27,6 +28,38 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
   const { user } = useAuth();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    setIsImageLoading(true);
+    
+    const fetchUrl = async () => {
+      try {
+        let url: string | null = null;
+        if (trip.image_path) {
+            url = await resolveStorageURL(trip.image_path);
+        } else if ((trip as any).image?.imageUrl) {
+            url = fixOldBucketUrl((trip as any).image.imageUrl);
+        }
+        
+        if (!cancel) {
+          setResolvedUrl(url);
+        }
+      } catch (e) {
+        console.error("img resolve failed:", e);
+      } finally {
+        if (!cancel) {
+          setIsImageLoading(false);
+        }
+      }
+    };
+    
+    fetchUrl();
+
+    return () => { cancel = true; };
+  }, [trip.image_path, (trip as any).image?.imageUrl]);
 
   useEffect(() => {
     const uid = user?.uid;
@@ -38,7 +71,7 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     const subscriptionsRef = collection(db, 'subscriptions');
     const q = query(
       subscriptionsRef,
-      where("itemId", "==", trip.id), // Use itemId to check across types
+      where("tripId", "==", trip.id),
       where("userId", "==", uid),
       limit(1)
     );
@@ -54,7 +87,6 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     return () => unsubscribe();
   }, [user?.uid, trip.id]);
 
-  const resolvedUrl = resolveStorageURL(trip.image_path);
   const title = trip.title[language as keyof typeof trip.title];
   const destination = trip.destination[language as keyof typeof trip.destination];
   const schedule = trip.schedule[language as keyof typeof trip.schedule];
@@ -64,18 +96,19 @@ export function TripCard({ trip, imageSizes }: TripCardProps) {
     <Card className="overflow-hidden flex flex-col">
       <CardContent className="p-0">
         <div className="relative h-56 w-full">
-          {resolvedUrl ? (
+          {isImageLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : resolvedUrl ? (
             <Image
               src={resolvedUrl}
               alt={title}
               fill
               className="object-cover"
               sizes={imageSizes}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/2/600/400"; }}
             />
           ) : (
             <div className="h-full w-full bg-muted flex items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">No Image</span>
             </div>
           )}
         </div>

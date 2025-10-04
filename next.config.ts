@@ -3,7 +3,6 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  reactStrictMode: false, // Temporarily disabled to reduce console noise in dev
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -12,21 +11,30 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-       {
+      {
         protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        hostname: 'placehold.co',
+        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https' ,
+        hostname: 'picsum.photos',
+        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
         pathname: '/**',
-      }
+      },
     ],
   },
   devIndicators: {

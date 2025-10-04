@@ -1,13 +1,30 @@
 // src/utils/storage-url.ts
-const BUCKET = "studio-3721710978-c50cb.appspot.com";
-const TOKEN  = "9c1e3e5b-2c7b-4b7a-9a6e-0123456789ab";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
-export function resolveStorageURL(path: string | null | undefined): string {
-  if (!path) return "";
-  // path مثال: "trips/ID/cover_....jpg" بدون سلاش في البداية
-  const objectPath = encodeURIComponent(path.replace(/^\/+/, ""));
-  // لو عندك توكن واحد مُضاف للملفات كلها:
-  const tokenParam = TOKEN ? `&token=${TOKEN}` : "";
-  // رابط مباشر للملف (alt=media = محتوى الصورة)
-  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${objectPath}?alt=media${tokenParam}`;
+/** يرجّع URL صالح للعرض من مسار Storage مثل "activities/.../cover.jpg" */
+export async function resolveStorageURL(imagePath?: string | null) {
+  if (!imagePath) return null;
+  try {
+    return await getDownloadURL(ref(storage, imagePath));
+  } catch (error: any) {
+    // Firebase throws an error if the file doesn't exist. 
+    // We can safely ignore this and return null.
+    if (error.code === 'storage/object-not-found') {
+      console.warn(`Image not found at path: ${imagePath}`);
+      return null;
+    }
+    // For other errors, we might want to log them.
+    console.error("Error getting download URL:", error);
+    return null;
+  }
+}
+
+/** لو عندك URL قديم مخزّن ببكت appspot، بنصلّحه مؤقتًا */
+export function fixOldBucketUrl(url?: string | null) {
+  if (!url) return null;
+  return url.replace(
+    "/b/studio-3721710978-c50cb.appspot.com/",
+    "/b/studio-3721710978-c50cb.firebasestorage.app/"
+  );
 }

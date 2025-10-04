@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import type { Trip } from "@/lib/types";
 import { updateTrip, TripValues } from "@/utils/updateTrip";
 import { resolveStorageURL } from "@/utils/storage-url";
-import { useLanguage } from "@/context/language-context";
 
 type EditTripFormProps = {
   trip: Trip;
@@ -21,7 +20,6 @@ type EditTripFormProps = {
 
 export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
   const { toast } = useToast();
-  const { content } = useLanguage();
 
   const [titleAr, setTitleAr] = useState("");
   const [titleEn, setTitleEn] = useState("");
@@ -47,9 +45,11 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       setScheduleEn(trip.schedule.en);
       setPrice(trip.price || "");
       
-      if (trip.image_path) {
-        setPreviewUrl(resolveStorageURL(trip.image_path));
-      }
+      resolveStorageURL(trip.image_path)
+        .then(url => {
+          if (url) setPreviewUrl(url);
+        })
+        .catch(console.error);
     }
   }, [trip]);
 
@@ -127,7 +127,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto p-1 pr-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="title-ar-edit">{content.tripTitleLabel} (العربية)</Label>
+          <Label htmlFor="title-ar-edit">عنوان الرحلة (العربية)</Label>
           <Input id="title-ar-edit" value={titleAr} onChange={e => setTitleAr(e.target.value)} required />
         </div>
         <div className="space-y-2">
@@ -137,7 +137,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="destination-ar-edit">{content.tripDestinationLabel} (العربية)</Label>
+          <Label htmlFor="destination-ar-edit">الوجهة (العربية)</Label>
           <Input id="destination-ar-edit" value={destinationAr} onChange={e => setDestinationAr(e.target.value)} required />
         </div>
         <div className="space-y-2">
@@ -147,7 +147,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          <div className="space-y-2">
-          <Label htmlFor="schedule-ar-edit">{content.tripScheduleLabel} (العربية)</Label>
+          <Label htmlFor="schedule-ar-edit">الموعد (العربية)</Label>
           <Input id="schedule-ar-edit" placeholder="مثال: كل سبت" value={scheduleAr} onChange={e => setScheduleAr(e.target.value)} />
         </div>
         <div className="space-y-2">
@@ -156,7 +156,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
         </div>
       </div>
       <div className="space-y-2">
-          <Label htmlFor="price-edit">{content.priceLabel}</Label>
+          <Label htmlFor="price-edit">السعر (بالريال)</Label>
           <Input id="price-edit" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} />
       </div>
 
@@ -164,7 +164,7 @@ export function EditTripForm({ trip, setDialogOpen }: EditTripFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/10/600/400"; }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
             <Button
               type="button"
               variant="destructive"

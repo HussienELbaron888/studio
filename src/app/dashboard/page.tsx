@@ -15,11 +15,8 @@ import { ManageActivities } from '@/components/dashboard/manage-activities';
 import { ManageTrips } from '@/components/dashboard/manage-trips';
 import { ManageEvents } from '@/components/dashboard/manage-events';
 import { ManageTalents } from '@/components/dashboard/manage-talents';
-import { ManageGallery } from '@/components/dashboard/manage-gallery';
-import { ManageSlider } from '@/components/dashboard/manage-slider';
 import { Loader2 } from 'lucide-react';
 import { getAuth } from "firebase/auth";
-import { ManageSubscribers } from '@/components/dashboard/manage-subscribers';
 
 // Temporary debug function to check claims from browser console
 if (typeof window !== "undefined") {
@@ -61,9 +58,8 @@ export default function DashboardPage() {
     { value: 'trips', label: content.manageTrips, component: <ManageTrips /> },
     { value: 'events', label: content.manageEvents, component: <ManageEvents /> },
     { value: 'talents', label: content.manageTalents, component: <ManageTalents /> },
-    { value: 'gallery', label: content.manageGallery, component: <ManageGallery /> },
-    { value: 'slider', label: content.manageSlider, component: <ManageSlider /> },
-    { value: 'subscribers', label: content.manageSubscribers, component: <ManageSubscribers /> },
+    { value: 'gallery', label: content.manageGallery, component: <p className="p-4 text-muted-foreground">Manage Gallery content here.</p> },
+    { value: 'slider', label: content.manageSlider, component: <p className="p-4 text-muted-foreground">Manage Slider content here.</p> },
   ];
 
   return (
@@ -72,7 +68,7 @@ export default function DashboardPage() {
         {content.dashboardTitle}
       </h1>
       <Tabs defaultValue="activities" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           {tabs.map(tab => (
             <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
           ))}

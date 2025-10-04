@@ -11,6 +11,7 @@ import type { Talent } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/context/language-context';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,20 +20,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function TalentsCard() {
   const { content, language } = useLanguage();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageHint, setImageHint] = useState<string>('');
   const [imageAlt, setImageAlt] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  const fallbackImageUrl = "https://images.unsplash.com/photo-1575426158836-0be172e108ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzdGFnZSUyMHNwb3RsaWdodHxlbnwwfHx8fDE3NTkxNDY5ODd8MA&ixlib=rb-4.1.0&q=80&w=1080";
-  const fallbackImageAlt = "A spotlight shining on a stage";
+  const fallbackImage = PlaceHolderImages.find((img) => img.id === 'talents-bg')!;
 
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    
     const fetchLatestTalentImage = async () => {
-      let finalUrl: string | null = null;
-      let finalAlt = fallbackImageAlt;
-
       try {
         const talentsQuery = query(collection(db, 'talents'), orderBy('created_at', 'desc'), limit(1));
         const snapshot = await getDocs(talentsQuery);
@@ -40,40 +35,42 @@ export function TalentsCard() {
         if (!snapshot.empty) {
           const latestTalent = snapshot.docs[0].data() as Talent;
           if (latestTalent.image_path) {
-            const resolved = resolveStorageURL(latestTalent.image_path);
-            if (resolved) {
-                finalUrl = resolved;
-                finalAlt = latestTalent.name.en;
+            const url = await resolveStorageURL(latestTalent.image_path);
+            if (url) {
+              setImageUrl(url);
+              setImageAlt(latestTalent.name.en);
+              setImageHint('student portrait'); // Generic hint
+            } else {
+              setImageUrl(fallbackImage.imageUrl);
+              setImageAlt(fallbackImage.description);
+              setImageHint(fallbackImage.imageHint);
             }
+          } else {
+             setImageUrl(fallbackImage.imageUrl);
+             setImageAlt(fallbackImage.description);
+             setImageHint(fallbackImage.imageHint);
           }
+        } else {
+          setImageUrl(fallbackImage.imageUrl);
+          setImageAlt(fallbackImage.description);
+          setImageHint(fallbackImage.imageHint);
         }
-        
-        if (alive) {
-          setImageUrl(finalUrl || fallbackImageUrl);
-          setImageAlt(finalAlt);
-        }
-
-      } catch (error: any) {
-        console.debug("Error fetching latest talent:", error?.code || error?.message);
-        if (alive) {
-          // On error, use fallback
-          setImageUrl(fallbackImageUrl);
-          setImageAlt(fallbackImageAlt);
-        }
+      } catch (error) {
+        console.error("Error fetching latest talent:", error);
+        // On error, use fallback
+        setImageUrl(fallbackImage.imageUrl);
+        setImageAlt(fallbackImage.description);
+        setImageHint(fallbackImage.imageHint);
       } finally {
-        if (alive) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchLatestTalentImage();
-
-    return () => { alive = false; }
-  }, []);
+  }, [fallbackImage]);
 
   return (
-    <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px] group">
+    <Card className="relative flex min-h-[350px] w-full flex-col justify-end overflow-hidden p-0 md:min-h-[400px]">
       {loading ? (
         <Skeleton className="absolute inset-0" />
       ) : (
@@ -83,8 +80,8 @@ export function TalentsCard() {
                 alt={imageAlt}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
+                data-ai-hint={imageHint}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImageUrl; }}
             />
         )
       )}

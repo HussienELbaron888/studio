@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import type { Talent } from "@/lib/types";
 import { TalentValues, updateTalent } from "@/utils/updateTalent";
 import { resolveStorageURL } from "@/utils/storage-url";
-import { useLanguage } from "@/context/language-context";
 
 type EditTalentFormProps = {
   talent: Talent;
@@ -46,9 +45,11 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
       setDetailsAr(talent.details.ar);
       setDetailsEn(talent.details.en);
       
-      if (talent.image_path) {
-        setPreviewUrl(resolveStorageURL(talent.image_path));
-      }
+      resolveStorageURL(talent.image_path)
+        .then(url => {
+          if (url) setPreviewUrl(url);
+        })
+        .catch(console.error);
     }
   }, [talent]);
 
@@ -156,7 +157,7 @@ export function EditTalentForm({ talent, setDialogOpen }: EditTalentFormProps) {
         <Label>إدراج صورة</Label>
         {previewUrl ? (
           <div className="relative w-full h-48 rounded-md overflow-hidden border">
-            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/seed/9/600/400"; }} />
+            <Image src={previewUrl} alt="Preview" fill style={{ objectFit: 'cover' }} />
             <Button
               type="button"
               variant="destructive"

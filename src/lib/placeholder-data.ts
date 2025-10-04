@@ -3,14 +3,18 @@ import { PlaceHolderImages } from './placeholder-images';
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id) || PlaceHolderImages[0];
 
-export type Activity = {
+// Note: The 'Activity' and 'Trip' types below use placeholder data structure,
+// but the actual app now fetches dynamic data from Firestore which might have a different structure.
+// These types are kept for reference or for components that might still use them.
+
+export type ActivityPlaceholder = {
   id: number;
   title: { en: string; ar: string };
   type: 'Free' | 'Paid';
   image: ReturnType<typeof getImage>;
 };
 
-export type Trip = {
+export type TripPlaceholder = {
   id: number;
   title: { en: string; ar: string };
   destination: { en: string; ar: string };
@@ -67,54 +71,6 @@ export const sliderItems: SliderItem[] = [
       ar: 'أطلق العنان لإبداع طفلك مع ورش عمل الفنون والحرف اليدوية.',
     },
     image: getImage('slider-3'),
-  },
-];
-
-export const activities: Activity[] = [
-  {
-    id: 1,
-    title: { en: 'Beach Volleyball', ar: 'كرة الطائرة الشاطئية' },
-    type: 'Free',
-    image: getImage('activity-1'),
-  },
-  {
-    id: 2,
-    title: { en: 'Mountain Hiking', ar: 'تسلق الجبال' },
-    type: 'Paid',
-    image: getImage('activity-2'),
-  },
-  {
-    id: 3,
-    title: { en: 'Pasta Making Class', ar: 'درس صنع الباستا' },
-    type: 'Paid',
-    image: getImage('activity-3'),
-  },
-  {
-    id: 4,
-    title: { en: 'Yoga in the Park', ar: 'يوجا في الحديقة' },
-    type: 'Free',
-    image: getImage('activity-4'),
-  },
-];
-
-export const trips: Trip[] = [
-  {
-    id: 1,
-    title: { en: 'Historical City Tour', ar: 'جولة في المدينة التاريخية' },
-    destination: { en: 'Athens, Greece', ar: 'أثينا، اليونان' },
-    image: getImage('trip-1'),
-  },
-  {
-    id: 2,
-    title: { en: 'Lake Relaxation', ar: 'استرخاء على البحيرة' },
-    destination: { en: 'Lake Como, Italy', ar: 'بحيرة كومو، إيطاليا' },
-    image: getImage('trip-2'),
-  },
-  {
-    id: 3,
-    title: { en: 'Forest Camping Weekend', ar: 'تخييم في الغابة' },
-    destination: { en: 'Black Forest, Germany', ar: 'الغابة السوداء، ألمانيا' },
-    image: getImage('trip-3'),
   },
 ];
 

@@ -3,14 +3,11 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import {initializeApp, getApps} from "firebase-admin/app";
 import {getAuth as getAdminAuth} from "firebase-admin/auth";
-import {getFirestore} from "firebase-admin/firestore";
 
 // Initialize admin SDK if not already initialized
 if (!getApps().length) {
   initializeApp();
 }
-
-const db = getFirestore();
 
 const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
 const BREVO_FROM_EMAIL = defineSecret("BREVO_FROM_EMAIL");
@@ -161,129 +158,3 @@ export const grantAdmin = onCall(
     }
   }
 );
-
-
-export const getStats = onCall(
-  {
-    region: "us-central1",
-    timeoutSeconds: 30,
-    memory: "256MiB",
-  },
-  async () => {
-    try {
-      const [
-        subscriptionsSnap,
-        activitiesSnap,
-        eventsSnap,
-        tripsSnap,
-        talentsSnap,
-      ] = await Promise.all([
-        db.collection("subscriptions").count().get(),
-        db.collection("activities").get(),
-        db.collection("events").count().get(),
-        db.collection("trips").count().get(),
-        db.collection("talents").count().get(),
-      ]);
-
-      let paidActivities = 0;
-      let freeActivities = 0;
-      activitiesSnap.forEach((doc) => {
-        if (doc.data().type === "Paid") {
-          paidActivities++;
-        } else {
-          freeActivities++;
-        }
-      });
-
-      const stats = {
-        subscriptions: subscriptionsSnap.data().count,
-        paidActivities: paidActivities,
-        freeActivities: freeActivities,
-        events: eventsSnap.data().count,
-        trips: tripsSnap.data().count,
-        talents: talentsSnap.data().count,
-      };
-
-      return {ok: true, data: stats};
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error("Failed to get stats:", msg);
-      throw new HttpsError("internal", `Failed to get stats: ${msg}`);
-    }
-  }
-);
-
-export const sendAdminEmail = onCall(
-  {
-    secrets: [BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME],
-    region: "us-central1",
-    timeoutSeconds: 30,
-    memory: "256MiB",
-  },
-  async (req) => {
-    const ctx = req.auth;
-    if (!ctx) {
-      throw new HttpsError("unauthenticated", "Login required to send emails.");
-    }
-
-    // This checks custom claims on the user's token
-    const role = (ctx.token.role as string) || "user";
-    if (role !== "admin") {
-      // eslint-disable-next-line max-len
-      throw new HttpsError("permission-denied", "You must be an admin to send bulk emails.");
-    }
-
-    const {to, subject, html, text} = req.data || {};
-
-    if (!Array.isArray(to) || to.length === 0) {
-      // eslint-disable-next-line max-len
-      throw new HttpsError("invalid-argument", "`to` must be a non-empty string array.");
-    }
-    if (!subject || (!html && !text)) {
-      // eslint-disable-next-line max-len
-      throw new HttpsError("invalid-argument", "Subject and (html or text) are required.");
-    }
-
-    const apiKey = BREVO_API_KEY.value();
-    const fromEmail = BREVO_FROM_EMAIL.value();
-    const fromName = BREVO_FROM_NAME.value() || "AGS Activity Platform";
-
-    if (!apiKey || !fromEmail) {
-      // eslint-disable-next-line max-len
-      throw new HttpsError("failed-precondition", "Brevo environment variables are missing.");
-    }
-
-    const recipients = [...new Set(to as string[])].map((email: string) => ({email}));
-
-    const payload = {
-      sender: {email: fromEmail, name: fromName},
-      to: recipients,
-      subject,
-      htmlContent: html || undefined,
-      textContent: text || undefined,
-    };
-
-    try {
-      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "api-key": apiKey,
-          "content-type": "application/json",
-          "accept": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        console.error(`Brevo error: ${res.status}`, msg);
-        // eslint-disable-next-line max-len
-        throw new HttpsError("internal", `Brevo API error: ${res.status} ${msg}`);
-      }
-      return {ok: true};
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error("Failed to send admin email:", msg);
-      throw new HttpsError("internal", msg);
-    }
-  });

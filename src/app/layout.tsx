@@ -29,7 +29,6 @@ export default function RootLayout({
     <LanguageProvider>
       <html lang="ar" dir="rtl">
         <head>
-          <link rel="icon" href="/AGS LOGO.png" sizes="any" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link
             rel="preconnect"
@@ -40,7 +39,7 @@ export default function RootLayout({
             href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
             rel="stylesheet"
           />
-          <title>AGS-Activity Platform</title>
+          <title>Al-Nadi Activities Hub</title>
           <meta name="description" content="Your one-stop hub for activities, trips, and events." />
         </head>
         <body className="font-body antialiased">
@@ -50,7 +49,7 @@ export default function RootLayout({
             <AppHeader />
             <div className="flex">
               {isClient && <AppSidebar />}
-              <SidebarInset className="pt-20">
+              <SidebarInset className="pt-16">
                   {children}
               </SidebarInset>
             </div>

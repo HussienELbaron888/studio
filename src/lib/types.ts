@@ -46,36 +46,3 @@ export type Talent = {
   image_path?: string | null;
   created_at?: any;
 };
-
-export type Album = {
-  id: string;
-  title: { en: string; ar: string };
-  date: string; // YYYY-MM-DD
-  imageUrls: string[];
-  created_at?: any;
-};
-
-export type Slide = {
-  id: string;
-  title: { en: string; ar: string };
-  description: { en: string; ar: string };
-  buttonText: { en: string; ar: string };
-  buttonHref: string;
-  image_path: string;
-  order: number;
-  published: boolean;
-  createdAt?: any;
-};
-
-export type Subscriber = {
-  id: string;
-  path: string;
-  itemType: "activity" | "trip" | "event";
-  itemTitle?: string;
-  className?: string;
-  studentName?: string;
-  userEmail: string;
-  userId: string;
-  subscribedAt?: Date;
-  phoneNumber?: string;
-};
